@@ -5,9 +5,8 @@
 <title>Sudoku Solver v03</title>
 <script type="text/javascript" src="js_source01.js"></script>
 </head>
-<body onload="tableCreate()">
+<body onload="initialise()">
 <h1>Sudoku Solver v03</h1>
-<!-- <input type="button" onclick="tableCreate()" value="Create Table!"/> -->
 <!-- <table border="1"> -->
 <!-- <tr> -->
 <!-- <td>11</td> -->
@@ -26,5 +25,13 @@
 <!-- </tr> -->
 <!-- </table> -->
 <div id='table01'></div>
+<br>
+<input type="button" onclick="showValues()" value="Solve"/>
+<br>
+<h2>Table Values</h2>
+<div id='values'></div>
+<br>
+<h2>Array Values</h2>
+<div id='arrayValues'></div>
 </body>
 </html>
