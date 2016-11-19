@@ -1,0 +1,22 @@
+/* mystyles.css */
+
+table {
+    width: 100px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: black;
+}
+
+td {
+    border-width: 1px;
+    border-style: solid;
+    border-color: black;
+}
+
+.default {
+    background-color: transparent;
+}
+
+.error {
+    background-color: red;
+}
