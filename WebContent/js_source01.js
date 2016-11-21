@@ -4,22 +4,18 @@
 
 /* http://stackoverflow.com/questions/14643617/create-table-using-javascript */
 
-function initialise(){
-	createArrays();
-	tableCreate();
-	showArrayValues();
-}
-
-function createArrays(){
+function createArrays() {
+    var i, j, k;
+    
 	window.allArrays = new Array();
 	
 	/* j[0]=box, j[1]=row, j[2]=col */
-	for(var j=0; j<3; j++){
+	for (j=0; j<3; j++){
 		window.allArrays[j] = new Array();
 		
-		for(var i = 0; i < 9; i++) {
+		for (i = 0; i < 9; i++) {
 			window.allArrays[j][i] = new Array();
-			for(var k=0; k<9; k++){
+			for (k=0; k<9; k++){
 				/* allArrays[What? 0:Box or 1:Row or 2:Col][Which? 0-8][1-9 Value & Position] */
 				window.allArrays[j][i][k] = '_';
 			}
@@ -29,33 +25,90 @@ function createArrays(){
 	createGrid81Array();
 }
 
+function getStartUpArrayOfDropDownOptions(){
+    var i,
+        ddlOptions = new Array(10);
+    
+    for (i=0; i<=9; i++) {
+        if (i != 0) {
+            ddlOptions[i] = i;
+        } else {
+            ddlOptions[i] = '_';
+        }
+    }
+    
+    return ddlOptions;
+}
+
 function createGrid81Array(){
 	window.grid81 = new Array();
 	
 	var i;
 	
-	for(i=0; i<81; i++){
+	for (i=0; i<81; i++){
 		var newCell = new Array();
 		
-		newCell[0] = getZYZXfromGridPos(i);
+		newCell[0] = translate_gridPos_2_arrayPos(i); /* arrayPos */
+        newCell[1] = translate_arrayPos_2_zyzx(newCell[0]); /* zyzx */
+        newCell[2] = '_'; /* current value */
+        newCell[3] = false; /* select is disabled? */
+//        newCell[3] = true; /* select is disabled? */
+        newCell[4] = 'default'; /* style class */
+        newCell[5] = getStartUpArrayOfDropDownOptions(); /* Start up Dropdown options */
 		
-		grid81[0] = newCell;
+		grid81[i] = newCell;
 	}
 }
 
-function getZYZXfromGridPos(gridPos){
-	var zyzx = new Array(),
-		boxPos, rowPos, colPos;
+function translate_gridPos_2_arrayPos(gridPos){
+	var arrayPos = new Array(),
+        boxPos, rowPos, colPos;
 	
-	
+	colPos = gridPos % 9;
+    rowPos = (gridPos - colPos) / 9;
+    boxPos = (Math.floor(rowPos / 3)) * 3 + ((gridPos - (gridPos % 3)) / 3) - (rowPos * 3);
+    
+    arrayPos[0] = boxPos;
+    arrayPos[1] = rowPos;
+    arrayPos[2] = colPos;
+    
+    return arrayPos;
+}
+
+function showGrid81Values(){
+    var showWhere = document.getElementById("grid81Values"),
+        h4label = document.createElement('h4'),
+        i, j, colonOrComma;
+    
+    for (i=0; i < window.grid81.length; i++) {
+        h4label.appendChild(document.createTextNode(i));
+
+        j = 0;
+/* http://stackoverflow.com/questions/5113374/javascript-check-if-variable-exists-is-defined-initialized */
+        while(typeof window.grid81[i][j] !== 'undefined') {
+            switch(j) {
+                case 0: colonOrComma = ': arrayPos['; break;
+                case 1: colonOrComma = ']; zyzx['; break;
+                case 2: colonOrComma = ']; '; break;
+                case 5: colonOrComma = '; selectOptions['; break;
+                default: colonOrComma = '; ';
+            }
+            h4label.appendChild(document.createTextNode(colonOrComma + window.grid81[i][j]));
+            j++;
+        }
+        h4label.appendChild(document.createTextNode(']'));
+        h4label.appendChild(document.createElement('br'));
+    }
+    
+    showWhere.appendChild(h4label);
 }
 
 function showArrayValues(){
 	var showWhere = document.getElementById("arrayValues"),
 		arrayTopLabel = ["Box", "Row", "Col"],
-		shownText, h3Label;
+		shownText, h3Label, j;
 	
-	for(var j=0; j<3; j++){ /* What? 0:box, 1:row or 2:col */
+	for (j=0; j<3; j++){ /* What? 0:box, 1:row or 2:col */
 		h3Label = document.createElement('h3');
 //		h3Label.innerHTML = arrayTopLabel[j];
 		h3Label.appendChild(document.createTextNode(arrayTopLabel[j]));
@@ -66,10 +119,11 @@ function showArrayValues(){
 }
 
 function showBigArray(j){
-	var bigArrayText = document.createElement('h4');
+	var i, k,
+        bigArrayText = document.createElement('h4');
 	
-	for(var i=0; i<9; i++){ /* Which box|row|col ? */
-		for(var k=0; k<9; k++){ /* 1-9 Value & Position */
+	for (i=0; i<9; i++){ /* Which box|row|col ? */
+		for (k=0; k<9; k++){ /* 1-9 Value & Position */
 			if(k == 0){
 				bigArrayText.appendChild(document.createTextNode(i + ': '));
 			}
@@ -95,9 +149,9 @@ function tableCreate(){
 //    tbl.style.width  = '100px';
 //    tbl.style.border = '1px solid black';
 
-    for( k = 0; k < rowSize; k++){
+    for ( k = 0; k < rowSize; k++){
         var tr = tbl.insertRow();
-        for( l = 0; l < colSize; l++){
+        for ( l = 0; l < colSize; l++){
 //            if(i == 2 && j == 1){
 //                break;
 //            } else {
@@ -115,55 +169,98 @@ function tableCreate(){
     insertWhere.appendChild(tbl);
 }
 
+function convert4ints2zyzx(z1, y, z2, x) {
+    var zyzx = new Array(4);
+    
+    zyzx[0] = z1;
+    zyzx[1] = y;
+    zyzx[2] = z2;
+    zyzx[3] = x;
+
+    return zyzx;
+}
+
+function translateArrayPos2gridPos(arrayPos) {
+    if(checkArrayPosValidity(arrayPos)) {
+        /* gridPos = colPos + (rowPos * 9) */
+        return (arrayPos[2] + (arrayPos[1] * 9));        
+	} else {
+		alert('ERROR translateArrayPos2gridPos(arrayPos[' + arrayPos + ']) checkArrayPosValidity(arrayPos) = false');
+	}
+}
+
+function translate_zyzx_2_gridPos(z1, y, z2, x) {
+    return (translateArrayPos2gridPos(translate_zyzx_2_arrayPos(z1, y, z2, x)));
+}
+
 function smallTableCreate(k, l){
-    var smallTbl = document.createTextNode('Cell'+k+l);
     
 	var i, j,
+        idNumber,
+        gridPos,
 		colSize = 3,
 		rowSize = 3,
 		tbl = document.createElement('table');
+//        zyzx = new Array();
 //    tbl.style.width  = '100px';
 //    tbl.style.border = '1px solid black';
 
-    for( i = 0; i < rowSize; i++){
+    for ( i = 0; i < rowSize; i++){
         var tr = tbl.insertRow();
-        for( j = 0; j < colSize; j++){
+        for ( j = 0; j < colSize; j++){
+            gridPos = translate_zyzx_2_gridPos(k, l, i, j);
+            
             var td = tr.insertCell();
             var thisDiv = document.createElement('div');
-            var idNumber = k.toString() + l.toString() + i.toString() + j.toString();
+            idNumber = k.toString() + l.toString() + i.toString() + j.toString();
             thisDiv.id = 'id' + idNumber;
 //            thisDiv.innerHTML = 'Cell' + idNumber;
             thisDiv.appendChild(document.createTextNode('Cell' + idNumber));
-            thisDiv.appendChild(createDropdown(idNumber));
+            
+            if(window.grid81[gridPos][2] == '_') {
+                thisDiv.appendChild(createDropdown(idNumber, gridPos));                
+            } else {
+                thisDiv.appendChild(document.createTextNode(window.grid81[gridPos][2]));
+            }
             td.appendChild(thisDiv);
 //            td.appendChild(document.createTextNode('Cell'+k+l+i+j));
             td.id = 'td' + idNumber;
 //            td.style.border = '1px solid black';
 //            td.style.backgroundColor = 'yellow';
-            td.className = 'default';
+//            td.className = 'default';
+            td.className = window.grid81[gridPos][4];
         }
     }
     
-//	return smallTbl;
 	return tbl;
 }
 
-function createDropdown(idNumber){
-	var ddl = document.createElement('select');
+function createDropdown(idNumber, gridPos){
+	var i,
+        ddl = document.createElement('select');
+    
 	ddl.name = 'ddl' + idNumber;
 	ddl.onchange = function() {checkCellValueValidity('ddl'+idNumber)};
+    ddl.disabled = window.grid81[gridPos][3];
 	
-	for(var i=0; i<=9; i++){
-		var atr = document.createElement('option');
-		if(i != 0){
-			atr.value = i;
-			atr.text = i;
-		} else {
-			atr.value = ' ';
-			atr.text = '_';
-		}
-		ddl.appendChild(atr);
-	}
+//	for (i=0; i<=9; i++){
+//		var atr = document.createElement('option');
+//		if(i != 0){
+//			atr.value = i;
+//			atr.text = i;
+//		} else {
+//			atr.value = ' ';
+//			atr.text = '_';
+//		}
+//		ddl.appendChild(atr);
+//	}
+    
+    for (i=0; i<window.grid81[gridPos][5].length; i++) {
+        var atr = document.createElement('option');
+        atr.value = window.grid81[gridPos][5][i];
+        atr.text  = window.grid81[gridPos][5][i];
+        ddl.appendChild(atr);
+    }
 	
 	return ddl;
 }
@@ -225,6 +322,7 @@ function showValues(){
 	
 	clearDiv("values");
 	clearDiv("arrayValues");
+	clearDiv("grid81Values");
 	
 	/*
 	 * Coordinate format: z1 y z2 x
@@ -248,10 +346,10 @@ function showValues(){
 	 * Same z1 & z2 values between ddlName-s means same Row
 	 * Same y  & x  values between ddlName-s means same Col
 	 */
-	for(z1 = 0; z1 <= 2; z1++) {
-		for(z2 = 0; z2 <= 2; z2++) {
-			for(y = 0; y <= 2; y++) {
-				for(x = 0; x <= 2; x++) {
+	for (z1 = 0; z1 <= 2; z1++) {
+		for (z2 = 0; z2 <= 2; z2++) {
+			for (y = 0; y <= 2; y++) {
+				for (x = 0; x <= 2; x++) {
 					/* ddlName formatted like this as it correlates to how the whole table 
 					 * was designed and given coordinates */
 					ddlName = z1.toString() + y.toString() + z2.toString() + x.toString();
@@ -273,6 +371,7 @@ function showValues(){
 	}
 	
 	showArrayValues();
+    showGrid81Values();
 }
 
 function getCellValue(ddlName){
@@ -294,7 +393,7 @@ function getCellValue(ddlName){
 	}
 	
 //	showWhere.appendChild(document.createTextNode(currentValue));
-	return currentValue	
+	return currentValue;
 }
 
 function updateArrays(z1, y, z2, x, cellValue){
@@ -341,6 +440,30 @@ function translate_zyzx_2_arrayPos(z1, y, z2, x){
 	return arrayPos;
 }
 
+function translate_arrayPos_2_zyzx(arrayPos){
+    var zyzx = new Array();
+    /* zyzx=[z1, y, z2, x] */
+    
+//    alert('in translate_arrayPos_2_zyzx(arrayPos='+ arrayPos +')');
+    
+    if(checkArrayPosValidity(arrayPos)){
+/*
+		boxPos = (3 * parseInt(z1)) + parseInt(y) ;
+		rowPos = (3 * parseInt(z1)) + parseInt(z2);
+		colPos = (3 * parseInt(y) ) + parseInt(x) ;
+*/
+        zyzx[0] = Math.floor(arrayPos[1] / 3);  /* z1 = rowPos / 3 */
+        zyzx[1] = arrayPos[0] % 3;              /* y  = boxPos mod 3 */
+        zyzx[2] = arrayPos[1] % 3;              /* z2 = rowPos mod 3 */
+        zyzx[3] = arrayPos[2] % 3;              /* x  = colPos mod 3 */
+        
+	} else {
+		alert('ERROR translate_arrayPos_2_zyzx(arrayPos='+ arrayPos +') checkArrayPosValidity(arrayPos) = false');
+    }
+    
+    return zyzx;
+}
+
 function check_zyzx_validity(z1, y, z2, x){
 	if(z1 >= 0 && z1 <= 2) {
 		if(y >= 0 && y <= 2) {
@@ -381,5 +504,12 @@ function checkArrayPosValidity(arrayPos){
 function findBoxIndex(arrayPos){
 	/* arrayPos has been prechecked to be valid before calling this function */
 	return (((arrayPos[1]%3)*3)+(arrayPos[2]%3)); /* should return a value between 0-8 */
+}
+
+function initialise() {
+	createArrays();
+	tableCreate();
+	showArrayValues();
+    showGrid81Values();
 }
 
