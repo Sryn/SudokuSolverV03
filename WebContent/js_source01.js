@@ -139,7 +139,7 @@ function showBigArray(j){
 	return bigArrayText;
 }
 
-function tableCreate(){
+function createTable(){
     var k, l,
     	colSize = 3,
     	rowSize = 3,
@@ -157,7 +157,7 @@ function tableCreate(){
 //            } else {
                 var td = tr.insertCell();
 //                td.appendChild(document.createTextNode('Cell'+i+j));
-                td.appendChild(smallTableCreate(k, l));
+                td.appendChild(createSmallTable(k, l));
 //                td.style.border = '1px solid black';
 //                if(i == 1 && j == 1){
 //                    td.setAttribute('rowSpan', '2');
@@ -180,20 +180,20 @@ function convert4ints2zyzx(z1, y, z2, x) {
     return zyzx;
 }
 
-function translateArrayPos2gridPos(arrayPos) {
+function translate_arrayPos_2_gridPos(arrayPos) {
     if(checkArrayPosValidity(arrayPos)) {
         /* gridPos = colPos + (rowPos * 9) */
         return (arrayPos[2] + (arrayPos[1] * 9));        
 	} else {
-		alert('ERROR translateArrayPos2gridPos(arrayPos[' + arrayPos + ']) checkArrayPosValidity(arrayPos) = false');
+		alert('ERROR translate_arrayPos_2_gridPos()(arrayPos[' + arrayPos + ']) checkArrayPosValidity(arrayPos) = false');
 	}
 }
 
 function translate_zyzx_2_gridPos(z1, y, z2, x) {
-    return (translateArrayPos2gridPos(translate_zyzx_2_arrayPos(z1, y, z2, x)));
+    return (translate_arrayPos_2_gridPos()(translate_zyzx_2_arrayPos(z1, y, z2, x)));
 }
 
-function smallTableCreate(k, l){
+function createSmallTable(k, l){
     
 	var i, j,
         idNumber,
@@ -278,6 +278,8 @@ function getDirectlyRelatedBoxCells(boxPos) {
 		directlyRelatedBoxCells[i] = boxPosInitialValue + (i % 3) + (Math.floor(i / 3) * 9);
 	}
 	
+	console.log('directlyRelatedBoxCells=' + directlyRelatedBoxCells);
+	
 	return directlyRelatedBoxCells;
 }
 
@@ -291,6 +293,8 @@ function getDirectlyRelatedRowCells(rowPos) {
 		directlyRelatedRowCells[i] = (rowPosTimesNine) + i;
 	}
 
+	console.log('directlyRelatedRowCells=' + directlyRelatedRowCells);
+	
 	return directlyRelatedRowCells;
 }
 
@@ -302,6 +306,8 @@ function getDirectlyRelatedColCells(colPos) {
 	for (i=0; i<9; i++) {
 		directlyRelatedColCells[i] = colPos + (i * 9);
 	}
+	
+	console.log('directlyRelatedColCells=' + directlyRelatedColCells);
 	
 	return directlyRelatedColCells;
 }
@@ -324,6 +330,7 @@ function checkIfElementIsInArray( elem, theArray) {
 }
 
 function putElemAtThisIndexInArray(elem, index, theArray) {
+//	var returnArray;
 	
 	if (index == 0) {
 		/* push at the front */
@@ -336,39 +343,57 @@ function putElemAtThisIndexInArray(elem, index, theArray) {
 		theArray.splice(index, 0, elem);
 	}
 	
-	return theArray;
+//	returnArray = theArray;
+	
+//	return returnArray;
 }
 
 function pushElemInArrayOrderly(elem, theArray) {
 	/* assume elem is not present in theArray */
 	var i,
-		foundPlace = false;
+		foundPlace = false,
 		whereToPut = 0,
-		returnArray;
+//		returnArray,
+		theArrayLength = theArray.length;
 	
-	if(theArray.length != 0) {
-		for (i = 0; i < theArray.length; i++) {
-			if (theArray[i] > elem) {
-				whereToPut = i;
-				foundPlace = true;
-				break;
-			}
-		}		
+	if(theArrayLength != 0) { // if theArray is empty, just place it as the first element, i.e. at index 0
+		if (theArray[theArrayLength - 1] < elem) {
+			/* last element in theArray is smaller than elem, so put at the end of the array */
+			whereToPut = theArrayLength;
+			foundPlace = true;
+		} else {
+			for (i = 0; i < theArray.length; i++) {
+				if (theArray[i] > elem) {
+				/* element at index i of theArray is bigger than elem, so insert elem at index i. 
+				 * Bigger current elements right-shifted */
+					whereToPut = i;
+					foundPlace = true;
+					break;
+				}
+			}		
+		}
 	}
 	
-	/* put at the end of the array */
+	/* no other bigger element found, so put at the end of the array */
 	if (!foundPlace) {
-		whereToPut = theArray.length;
+		whereToPut = theArrayLength;
 	}
 	
-	returnArray = putElemAtThisIndexInArray(elem, whereToPut, theArray);
+	console.log('In pushElemInArrayOrderly(elem='+elem+', theArray['+theArray+'])');
 	
-	return returnArray;
+//	returnArray = putElemAtThisIndexInArray(elem, whereToPut, theArray);
+	putElemAtThisIndexInArray(elem, whereToPut, theArray);
+	
+	console.log('After processing: theArray['+theArray+']');
+//	console.log('After processing: returnArray['+returnArray+']');
+	
+//	return returnArray;
 }
 
 /* Will return back an array of sequential, non-repeating array of gridPos numbers */
 function getAllDirectlyRelatedCells(arrayPos) {
-	var i, j, tempArray,
+	var i, j, 
+//		tempArray,
 		directlyRelatedBoxRowColCells = new Array(3),
 		allDirectlyRelatedCells = new Array();
 	
@@ -377,16 +402,107 @@ function getAllDirectlyRelatedCells(arrayPos) {
 	directlyRelatedBoxRowColCells[2] = getDirectlyRelatedColCells(arrayPos[2]);
 	
 	for (i=0; i<3; i++) {		
-		for (j = 0; j < directlyRelatedBoxRowColCells[i].length; j++) {
-			if (!checkIfElementIsInArray( directlyRelatedBoxRowColCells[i][j], allDirectlyRelatedCells)) {
-				/* put directlyRelatedBoxRowColCells[i][j] in allDirectlyRelatedCells in proper order */
-				tempArray = pushElemInArrayOrderly(directlyRelatedBoxRowColCells[i][j], allDirectlyRelatedCells);
-//				allDirectlyRelatedCells = tempArray; /* testing passing of array to see if its modified in called function */
+		if (directlyRelatedBoxRowColCells[i].length > 0) {
+			for (j = 0; j < directlyRelatedBoxRowColCells[i].length; j++) {
+				if (!checkIfElementIsInArray( directlyRelatedBoxRowColCells[i][j], allDirectlyRelatedCells)) {
+					/* put directlyRelatedBoxRowColCells[i][j] in allDirectlyRelatedCells in proper order */
+//					tempArray = pushElemInArrayOrderly(directlyRelatedBoxRowColCells[i][j], allDirectlyRelatedCells);
+					
+					/* allDirectlyRelatedCells is passed as reference and contents are changed
+					 *  in the called functions and changes persists back here */
+					pushElemInArrayOrderly(directlyRelatedBoxRowColCells[i][j], allDirectlyRelatedCells); 
+					
+//					allDirectlyRelatedCells = tempArray; /* testing passing of array to see if its modified in called function */
+				}
 			}
 		}
 	}
 	
+	console.log('In getAllDirectlyRelatedCells(arrayPos['+arrayPos+']) allDirectlyRelatedCells['+allDirectlyRelatedCells+']');
+	
 	return allDirectlyRelatedCells;
+}
+
+// not implemented
+function getAllChosenValuesFromArrayPos(arrayPos) {
+	var chosenValues = new Array();
+	
+	/* in each box-row-col in arrayPos 
+	 * get all the user chosen values
+	 * and copy them sequentially non-repeating
+	 * into the chosenValues array */
+	
+	return chosenValues;
+}
+
+// not implemented
+function getAllNonChosenValuesFromChosenValuesArray(chosenValues) {
+	var nonChosenValues = new array();
+	
+	/* prepare a _,1-9 array
+	 * for each value in chosenValues array
+	 * remove it from the former array
+	 * and return the former array */
+	
+	return nonChosenValues;
+}
+
+// not implemented
+function updateGridPosSelectOptions(gridPos, newSelectOptions) {
+	var changeExecuted = false;
+	
+	/* compare newSelectOptions with the existing select options at gridPos in grid81 
+	 * if different
+	 * set newSelectOptions as the new select options at gridPos in grid81
+	 * and set changeExecuted as true
+	 * return changeExecuted */
+	
+	return changeExecuted;
+}
+
+// not implemented
+function updateDOMatTheseGridPos(gridPosArray) {
+	/* for each gridPos in gridPosArray
+	 * update the select options
+	 * at the gridPos in the DOM */
+}
+
+function updateSelectOptionsForTheseGridPos(gridPosArray) {
+	var i,
+		gridPosArrayLength = gridPosArray.length,
+		currentArrayPos,
+		currentChosenValues,
+		currentNonChosenValues,
+		gridPosChangedBoolean,
+		changedGridPosSelectOptions = new Array();
+	
+	if(gridPosArrayLength > 0) {
+		// do something
+		for (i=0; i<gridPosArrayLength; i++) {
+			// for each gridPos in gridPosArray, get the box-row-col arrayPos
+			currentArrayPos = translate_gridPos_2_arrayPos(gridPosArray[i]);
+			
+			// build an array of all the chosen values in those box-row-col arrayPos
+			currentChosenValues = getAllChosenValuesFromArrayPos(currentArrayPos); // not implemented
+			
+			// build an array of the values not in the previous array
+			currentNonChosenValues = getAllNonChosenValuesFromChosenValuesArray(currentChosenValues); // not implemented
+			
+			// save that array as the selectOptions for that gridPos in the grid81 array
+			gridPosChangedBoolean = updateGridPosSelectOptions(gridPosArray[i], currentNonChosenValues);
+			
+			if(gridPosChangedBoolean) { // this is to not make any changes to DOM where unchanged
+				// push current gridPos at the end of changedGridPosSelectOptions array
+				changedGridPosSelectOptions.push(gridPosArray[i]); 
+			}
+			
+		}
+		
+		// update the DOM only at the gridPos-es with changed select options
+		if (changedGridPosSelectOptions.length > 0) {
+			updateDOMatTheseGridPos(changedGridPosSelectOptions); // not implemented
+		}
+	}
 }
 
 function updateRelatedCellsValues(zyzx, newCellValue) {
@@ -405,17 +521,26 @@ function updateRelatedCellsValues(zyzx, newCellValue) {
 		 * build an array of the values not in the previous array
 		 * save that array as the selectOptions for that gridPos in the grid81 array
 		 *  */
+		
+		updateSelectOptionsForTheseGridPos(directlyRelatedCellsArray);
+		
 	} else {
 		alert('ERROR updateRelatedCellsValues(zyzx['+zyzx+'] check_zyzx_validity=false');
-
 	}
 }
 
 function cellValueChanged(ddlName){
 //	alert("caller is " + ddlName + ", " + arguments.callee.caller.toString());
 	var zyzx = getZYZXfromDdlName(ddlName),
-		newCellValue = getCellValue(ddlName);
-//	alert("caller is " + zyzx[0] + zyzx[1] + zyzx[2] + zyzx[3]);
+		zyzxAsString,
+		newCellValue;
+	
+	console.log('in cellValueChanged(ddlName='+ddlName+')'); // Outputs to browser's console
+	
+	zyzxAsString = zyzx[0].toString() + zyzx[1].toString() + zyzx[2].toString() + zyzx[3].toString();
+	newCellValue = getCellValue(zyzxAsString);
+	
+	//	alert("caller is " + zyzx[0] + zyzx[1] + zyzx[2] + zyzx[3]);
 	changeCellClass(zyzx, 'error'); /* Just a proof of concept (POC) function. Comment out when true functions completed. */
 	updateRelatedCellsValues(zyzx, newCellValue);
 }
@@ -537,7 +662,10 @@ function getCellValue(ddlName){
 		}
 	} else {
 		currentValue = '0';
-		alert('ERROR getCellValue('+ddlName+')');
+//		alert('ERROR getCellValue('+ddlName+ ', caller: ' + arguments.callee.caller.toString() + ')'); // arguments.callee is obsolete
+//		alert('ERROR getCellValue('+ddlName+ ', caller: ' + getCellValue.caller + ')'); // function.caller is non-standard
+		alert('ERROR getCellValue(' + ddlName+ ')');
+		
 	}
 	
 //	showWhere.appendChild(document.createTextNode(currentValue));
@@ -656,7 +784,7 @@ function findBoxIndex(arrayPos){
 
 function initialise() {
 	createArrays();
-	tableCreate();
+	createTable();
 	showArrayValues();
     showGrid81Values();
 }
