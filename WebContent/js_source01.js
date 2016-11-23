@@ -202,7 +202,7 @@ function convert4ints2zyzx(z1, y, z2, x) {
 
 function translate_arrayPos_2_gridPos(arrayPos) {
 	
-	console.log('In translate_arrayPos_2_gridPos(arrayPos['+arrayPos+'])');
+//	console.log('In translate_arrayPos_2_gridPos(arrayPos['+arrayPos+'])');
 	
     if(checkArrayPosValidity(arrayPos)) {
         /* gridPos = colPos + (rowPos * 9) */
@@ -214,7 +214,7 @@ function translate_arrayPos_2_gridPos(arrayPos) {
 
 function translate_zyzx_2_gridPos(z1, y, z2, x) {
 	
-	console.log('In translate_zyzx_2_gridPos(z1='+z1+', y='+y+', z2='+z2+', x='+x+')');
+//	console.log('In translate_zyzx_2_gridPos(z1='+z1+', y='+y+', z2='+z2+', x='+x+')');
 	
     return (translate_arrayPos_2_gridPos(translate_zyzx_2_arrayPos(z1, y, z2, x)));
 }
@@ -238,7 +238,7 @@ function createSmallTable(k, l){
         for ( j = 0; j < colSize; j++){
             gridPos = translate_zyzx_2_gridPos(k, l, i, j);
             
-            console.log(' gridPos='+gridPos);
+//            console.log(' gridPos='+gridPos);
             
             var td = tr.insertCell();
             var thisDiv = document.createElement('div');
@@ -343,7 +343,7 @@ function getDirectlyRelatedColCells(colPos) {
 }
 
 /* returns true if elem is present in theArray, otherwise returns false */
-function checkIfElementIsInArray( elem, theArray) {
+function checkIfElementIsInArray(elem, theArray) {
 	var i,
 		found = false;
 	
@@ -453,31 +453,94 @@ function getAllDirectlyRelatedCells(arrayPos) {
 	return allDirectlyRelatedCells;
 }
 
-// not implemented
+function getChosenValuesFromBoxRowOrCol(boxRowOrCol, whichBoxRowOrCol, chosenValues) {
+	var i,
+		aNumber;
+	
+	/* from window.allArrays
+	 * i.e. the array at window.allArrays[boxRowOrCol][whichBoxRowOrCol]
+	 * read the chosenValues one-by-one, if any
+	 * and put them each, orderly, in the chosenValues array
+	 * there shouldn't be any non-integers nor repetitions */
+	
+	for (i=0; i<9; i++) {
+		aNumber = window.allArrays[boxRowOrCol][whichBoxRowOrCol][i];
+		
+		if (aNumber != '_') {
+			if (!checkIfElementIsInArray(aNumber, chosenValues)) {
+				pushElemInArrayOrderly(aNumber, chosenValues);
+			}
+		}
+	}
+}
+
 function getAllChosenValuesFromArrayPos(arrayPos) {
-	var chosenValues = new Array();
+	var i,
+		currentChosenValues,
+		chosenValues = new Array();
 	
 	/* in each box-row-col in arrayPos 
 	 * get all the user chosen values
 	 * and copy them sequentially non-repeating
-	 * into the chosenValues array */
+	 * into the chosenValues array
+	 * and return chosenValues */
+	
+	for (i=0; i<3; i++) {
+		getChosenValuesFromBoxRowOrCol(i, arrayPos[i], chosenValues);
+	}
 	
 	return chosenValues;
 }
 
-// not implemented
 function getAllNonChosenValuesFromChosenValuesArray(chosenValues) {
-	var nonChosenValues = new array();
+	/* assume chosenValues is either an empty array
+	 * or only has a sequential list of integers */
 	
-	/* prepare a _,1-9 array
-	 * for each value in chosenValues array
-	 * remove it from the former array
-	 * and return the former array */
+	var i,
+		tmpNonChosenValues,
+		rtnNonChosenValues = new Array();
 	
-	return nonChosenValues;
+	/* prepare a _,1-9 array (tmpNonChosenValues)
+	 * for each value in tmpNonChosenValues array
+	 * if it is not present in chosenValues
+	 * copy it from the tmpNonChosenValues array
+	 * and put it at the end into rtnNonChosenValues
+	 * return rtnNonChosenValues */
+	
+	tmpNonChosenValues = getStartUpArrayOfDropDownOptions();
+	
+	for (i = 0; i < tmpNonChosenValues.length; i++) {
+		if (checkIfElementIsInArray(tmpNonChosenValues[i], chosenValues)) {
+			rtnNonChosenValues.push(tmpNonChosenValues[i]);
+		}
+	}
+	
+	return rtnNonChosenValues;
 }
 
-// not implemented
+function checkIfTwoArraysAreTheSame(firstArray, secondArray) {
+	/* assumes both arrays are sorted as required */
+	
+	var i = 0,
+		result = true,
+		firstArryLength = firstArray.length;
+	
+	if (firstArrayLength == secondArray.length) {
+		if (firstArrayLength > 0) {
+			while(result && i < firstArrayLength) {
+				if (firstArray[i] != secondArray[i]) {
+					result = false;
+				}
+				i++;
+			}			
+		}
+	} else {
+		result = false;
+	}
+	
+	return result;
+}
+
 function updateGridPosSelectOptions(gridPos, newSelectOptions) {
 	var changeExecuted = false;
 	
@@ -486,6 +549,11 @@ function updateGridPosSelectOptions(gridPos, newSelectOptions) {
 	 * set newSelectOptions as the new select options at gridPos in grid81
 	 * and set changeExecuted as true
 	 * return changeExecuted */
+	
+	if (!checkIfTwoArraysAreTheSame(newSelectOptions, grid81[gridPos][5])) {
+		grid81[gridPos][5] = newSelectOptions;
+		changeExecuted = true;
+	}
 	
 	return changeExecuted;
 }
@@ -513,10 +581,10 @@ function updateSelectOptionsForTheseGridPos(gridPosArray) {
 			currentArrayPos = translate_gridPos_2_arrayPos(gridPosArray[i]);
 			
 			// build an array of all the chosen values in those box-row-col arrayPos
-			currentChosenValues = getAllChosenValuesFromArrayPos(currentArrayPos); // not implemented
+			currentChosenValues = getAllChosenValuesFromArrayPos(currentArrayPos);
 			
 			// build an array of the values not in the previous array
-			currentNonChosenValues = getAllNonChosenValuesFromChosenValuesArray(currentChosenValues); // not implemented
+			currentNonChosenValues = getAllNonChosenValuesFromChosenValuesArray(currentChosenValues);
 			
 			// save that array as the selectOptions for that gridPos in the grid81 array
 			gridPosChangedBoolean = updateGridPosSelectOptions(gridPosArray[i], currentNonChosenValues);
@@ -728,7 +796,7 @@ function updateArrays(z1, y, z2, x, cellValue){
 
 function translate_zyzx_2_arrayPos(z1, y, z2, x){
 	
-	console.log('In translate_zyzx_2_arrayPos(z1='+z1+', y='+y+', z2='+z2+', x='+x+')');
+//	console.log('In translate_zyzx_2_arrayPos(z1='+z1+', y='+y+', z2='+z2+', x='+x+')');
 	
 	var boxPos, rowPos, colPos,
 		arrayPos = new Array();
