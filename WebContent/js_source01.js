@@ -5,6 +5,9 @@
 /* http://stackoverflow.com/questions/14643617/create-table-using-javascript */
 
 function createArrays() {
+	
+	console.log('In createArrays()');
+	
     var i, j, k;
     
 	window.allArrays = new Array();
@@ -41,6 +44,9 @@ function getStartUpArrayOfDropDownOptions(){
 }
 
 function createGrid81Array(){
+	
+	console.log('In createGrid81Array()');
+	
 	window.grid81 = new Array();
 	
 	var i;
@@ -61,6 +67,9 @@ function createGrid81Array(){
 }
 
 function translate_gridPos_2_arrayPos(gridPos){
+	
+//	console.log('In translate_gridPos_2_arrayPos(gridPos='+gridPos+')');
+	
 	var arrayPos = new Array(),
         boxPos, rowPos, colPos;
 	
@@ -72,10 +81,15 @@ function translate_gridPos_2_arrayPos(gridPos){
     arrayPos[1] = rowPos;
     arrayPos[2] = colPos;
     
+//	console.log(' arrayPos['+arrayPos+']');    
+    
     return arrayPos;
 }
 
 function showGrid81Values(){
+	
+	console.log('In showGrid81Values()');
+	
     var showWhere = document.getElementById("grid81Values"),
         h4label = document.createElement('h4'),
         i, j, colonOrComma;
@@ -104,6 +118,9 @@ function showGrid81Values(){
 }
 
 function showArrayValues(){
+
+	console.log('In showArrayValues()');
+	
 	var showWhere = document.getElementById("arrayValues"),
 		arrayTopLabel = ["Box", "Row", "Col"],
 		shownText, h3Label, j;
@@ -140,6 +157,9 @@ function showBigArray(j){
 }
 
 function createTable(){
+
+	console.log('In createTable()');
+	
     var k, l,
     	colSize = 3,
     	rowSize = 3,
@@ -181,6 +201,9 @@ function convert4ints2zyzx(z1, y, z2, x) {
 }
 
 function translate_arrayPos_2_gridPos(arrayPos) {
+	
+	console.log('In translate_arrayPos_2_gridPos(arrayPos['+arrayPos+'])');
+	
     if(checkArrayPosValidity(arrayPos)) {
         /* gridPos = colPos + (rowPos * 9) */
         return (arrayPos[2] + (arrayPos[1] * 9));        
@@ -190,10 +213,15 @@ function translate_arrayPos_2_gridPos(arrayPos) {
 }
 
 function translate_zyzx_2_gridPos(z1, y, z2, x) {
-    return (translate_arrayPos_2_gridPos()(translate_zyzx_2_arrayPos(z1, y, z2, x)));
+	
+	console.log('In translate_zyzx_2_gridPos(z1='+z1+', y='+y+', z2='+z2+', x='+x+')');
+	
+    return (translate_arrayPos_2_gridPos(translate_zyzx_2_arrayPos(z1, y, z2, x)));
 }
 
 function createSmallTable(k, l){
+	
+	console.log('In createSmallTable(k='+k+', l='+l+')');
     
 	var i, j,
         idNumber,
@@ -209,6 +237,8 @@ function createSmallTable(k, l){
         var tr = tbl.insertRow();
         for ( j = 0; j < colSize; j++){
             gridPos = translate_zyzx_2_gridPos(k, l, i, j);
+            
+            console.log(' gridPos='+gridPos);
             
             var td = tr.insertCell();
             var thisDiv = document.createElement('div');
@@ -697,6 +727,9 @@ function updateArrays(z1, y, z2, x, cellValue){
 }
 
 function translate_zyzx_2_arrayPos(z1, y, z2, x){
+	
+	console.log('In translate_zyzx_2_arrayPos(z1='+z1+', y='+y+', z2='+z2+', x='+x+')');
+	
 	var boxPos, rowPos, colPos,
 		arrayPos = new Array();
 	/* arrayPos=[boxPos, rowPos, colPos] */
@@ -762,6 +795,8 @@ function check_zyzx_validity(z1, y, z2, x){
 
 function checkArrayPosValidity(arrayPos){
 	
+//	console.log(checkArrayPosValidity.caller);
+	
 	if(arrayPos[0] >= 0 && arrayPos[0] <= 9){ /* box validity */
 		if(arrayPos[1] >= 0 && arrayPos[1] <= 9){ /* row validity */
 			if(arrayPos[2] >= 0 && arrayPos[2] <= 9){ /* col validity */
@@ -783,6 +818,9 @@ function findBoxIndex(arrayPos){
 }
 
 function initialise() {
+	
+	console.log('In initialise()');
+	
 	createArrays();
 	createTable();
 	showArrayValues();
