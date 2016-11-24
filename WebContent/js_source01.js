@@ -92,10 +92,17 @@ function showGrid81Values(){
 	
     var showWhere = document.getElementById("grid81Values"),
         h4label = document.createElement('h4'),
-        i, j, colonOrComma;
+        i, j, aText, colonOrComma;
     
     for (i=0; i < window.grid81.length; i++) {
-        h4label.appendChild(document.createTextNode(i));
+    	
+    	if(i<10) {
+    		aText = '_' + i.toString();
+    	} else {
+    		aText = i;
+    	}
+    	
+        h4label.appendChild(document.createTextNode(aText));
 
         j = 0;
 /* http://stackoverflow.com/questions/5113374/javascript-check-if-variable-exists-is-defined-initialized */
@@ -331,7 +338,7 @@ function getDirectlyRelatedBoxCells(boxPos) {
 		directlyRelatedBoxCells[i] = boxPosInitialValue + (i % 3) + (Math.floor(i / 3) * 9);
 	}
 	
-	console.log('directlyRelatedBoxCells=' + directlyRelatedBoxCells);
+	console.log('  directlyRelatedBoxCells=' + directlyRelatedBoxCells);
 	
 	return directlyRelatedBoxCells;
 }
@@ -346,7 +353,7 @@ function getDirectlyRelatedRowCells(rowPos) {
 		directlyRelatedRowCells[i] = (rowPosTimesNine) + i;
 	}
 
-	console.log('directlyRelatedRowCells=' + directlyRelatedRowCells);
+	console.log('  directlyRelatedRowCells=' + directlyRelatedRowCells);
 	
 	return directlyRelatedRowCells;
 }
@@ -360,7 +367,7 @@ function getDirectlyRelatedColCells(colPos) {
 		directlyRelatedColCells[i] = colPos + (i * 9);
 	}
 	
-	console.log('directlyRelatedColCells=' + directlyRelatedColCells);
+	console.log('  directlyRelatedColCells=' + directlyRelatedColCells);
 	
 	return directlyRelatedColCells;
 }
@@ -419,7 +426,7 @@ function pushElemInArrayOrderly(elem, theArray) {
 			foundPlace = true;
 		} else {
 			for (i = 0; i < theArray.length; i++) {
-				if (theArray[i] > elem) {
+				if ((theArray[i] != '_') && (theArray[i] > elem)) {
 				/* element at index i of theArray is bigger than elem, so insert elem at index i. 
 				 * Bigger current elements right-shifted */
 					whereToPut = i;
@@ -438,7 +445,7 @@ function pushElemInArrayOrderly(elem, theArray) {
 //	returnArray = putElemAtThisIndexInArray(elem, whereToPut, theArray);
 	putElemAtThisIndexInArray(elem, whereToPut, theArray);
 	
-	console.log('After processing: theArray['+theArray+']');
+	console.log(' After processing: theArray['+theArray+']');
 //	console.log('After processing: returnArray['+returnArray+']');
 	
 //	return returnArray;
@@ -452,7 +459,8 @@ function getAllDirectlyRelatedCells(arrayPos) {
 	var i, j, 
 //		tempArray,
 		directlyRelatedBoxRowColCells = new Array(3),
-		allDirectlyRelatedCells = new Array();
+		allDirectlyRelatedCells = new Array(),
+		theChangedGridPos = translate_arrayPos_2_gridPos(arrayPos);
 	
 	directlyRelatedBoxRowColCells[0] = getDirectlyRelatedBoxCells(arrayPos[0]);
 	directlyRelatedBoxRowColCells[1] = getDirectlyRelatedRowCells(arrayPos[1]);
@@ -467,7 +475,11 @@ function getAllDirectlyRelatedCells(arrayPos) {
 					
 					/* allDirectlyRelatedCells is passed as reference and contents are changed
 					 *  in the called functions and changes persists back here */
-					pushElemInArrayOrderly(directlyRelatedBoxRowColCells[i][j], allDirectlyRelatedCells); 
+					// don't include the user changed gridPos in the array
+					// as we don't want that gridPos selectOptions and selectedValue to change
+					if (directlyRelatedBoxRowColCells[i][j] != theChangedGridPos) {
+						pushElemInArrayOrderly(directlyRelatedBoxRowColCells[i][j], allDirectlyRelatedCells); 
+					}
 					
 //					allDirectlyRelatedCells = tempArray; /* testing passing of array to see if its modified in called function */
 				}
@@ -475,7 +487,8 @@ function getAllDirectlyRelatedCells(arrayPos) {
 		}
 	}
 	
-	console.log('In getAllDirectlyRelatedCells(arrayPos['+arrayPos+']) allDirectlyRelatedCells['+allDirectlyRelatedCells+']');
+//	console.log('In getAllDirectlyRelatedCells(arrayPos['+arrayPos+']) allDirectlyRelatedCells['+allDirectlyRelatedCells+']');
+	console.log(' allDirectlyRelatedCells['+allDirectlyRelatedCells+']');
 	
 	return allDirectlyRelatedCells;
 }
@@ -608,14 +621,21 @@ function translate_gridPos_2_zyzx(gridPos) {
 }
 
 function updateDDLoptionsAtGridPos(currentDDL, gridPos) {
+	/* but if it has a selectedValue, 
+	 * don't remove that value from the selectOptions */
+	
 	var singleDDLarray = new Array(1),
 		i,
 		currentDDLoptionsLength = currentDDL.length;
 	
 	/* http://www.w3schools.com/jsref/met_select_remove.asp */
 	// clear the currentDDL of existing options
-	for (i = currentDDLoptionsLength-1; i >= 0; i--) {
-		currentDDL.remove(i);
+//	for (i = currentDDLoptionsLength-1; i >= 0; i--) { // this works as well
+//		currentDDL.remove(i);
+//	}
+	
+	for (i = 0; i < currentDDLoptionsLength; i++) {
+		currentDDL.remove(currentDDL.length - 1);
 	}
 	
 	singleDDLarray[0] = currentDDL;
@@ -623,7 +643,6 @@ function updateDDLoptionsAtGridPos(currentDDL, gridPos) {
 	addGrid81OptionsToDDL(gridPos, singleDDLarray);
 }
 
-// not implemented
 function updateDOMatTheseGridPos(gridPosArray) {
 	/* for each gridPos in gridPosArray
 	 * update the select options
@@ -671,6 +690,17 @@ function updateSelectOptionsForTheseGridPos(gridPosArray) {
 			// build an array of the values not in the previous array
 			currentNonChosenValues = getAllNonChosenValuesFromChosenValuesArray(currentChosenValues);
 			
+			// must add the current gridPos selectedValue into currentNonChosenValues
+			/* get current gridPos selectedValue
+			 * add that value into currentNonChosenValues
+			 * except if the current gridPos selectedValue is '_'
+			 * as that should already be in currentNonChosenValues */
+			if(window.grid81[gridPosArray[i]][2] != '_') {
+				pushElemInArrayOrderly(window.grid81[gridPosArray[i]][2], currentNonChosenValues);
+			}
+			
+			console.log('  currentNonChosenValues['+currentNonChosenValues+']');
+			
 			// save that array as the selectOptions for that gridPos in the grid81 array
 			gridPosChangedBoolean = updateGridPosSelectOptions(gridPosArray[i], currentNonChosenValues);
 			
@@ -683,7 +713,22 @@ function updateSelectOptionsForTheseGridPos(gridPosArray) {
 		
 		// update the DOM only at the gridPos-es with changed select options
 		if (changedGridPosSelectOptions.length > 0) {
-			updateDOMatTheseGridPos(changedGridPosSelectOptions); // not implemented
+			updateDOMatTheseGridPos(changedGridPosSelectOptions);
+		}
+	}
+}
+
+function updateSelectedValueForTheseGridPos(gridPosArray) {
+	var i,
+		gridPosArrayLength = gridPosArray.length,
+		zyzx,
+		currentDDL;
+	
+	if (gridPosArrayLength > 0) {
+		for (i = 0; i < gridPosArrayLength; i++) {
+			zyzx = translate_gridPos_2_zyzx(gridPosArray[i]);
+			currentDDL = getDDLbyZYZX(zyzx);
+			currentDDL.value = window.grid81[gridPosArray[i]][2];
 		}
 	}
 }
@@ -706,7 +751,7 @@ function updateRelatedCellsValues(zyzx, newCellValue) {
 		 *  */
 		
 		updateSelectOptionsForTheseGridPos(directlyRelatedCellsArray);
-		
+		updateSelectedValueForTheseGridPos(directlyRelatedCellsArray);
 	} else {
 		alert('ERROR updateRelatedCellsValues(zyzx['+zyzx+'] check_zyzx_validity=false');
 	}
@@ -726,11 +771,16 @@ function refreshDiv(theDiv) {
 	}
 }
 
+function updateCurrentValueInGrid81(gridPos, newCellValue) {
+	window.grid81[gridPos][2] = newCellValue;
+}
+
 function cellValueChanged(ddlName){
 //	alert("caller is " + ddlName + ", " + arguments.callee.caller.toString());
 	var zyzx = getZYZXfromDdlName(ddlName),
 //		zyzxAsString,
-		newCellValue;
+		newCellValue,
+		gridPos;
 	
 	console.log('in cellValueChanged(ddlName='+ddlName+')'); // Outputs to browser's console
 	
@@ -738,6 +788,10 @@ function cellValueChanged(ddlName){
 //	newCellValue = getCellValue(zyzxAsString);
 	
 	newCellValue = getCellValueByZYZX(zyzx);
+	
+	gridPos = translate_zyzx_2_gridPos(zyzx[0], zyzx[1], zyzx[2], zyzx[3]);
+	
+	updateCurrentValueInGrid81(gridPos, newCellValue);
 	
 	//	alert("caller is " + zyzx[0] + zyzx[1] + zyzx[2] + zyzx[3]);
 	changeCellClass(zyzx, 'error'); /* Just a proof of concept (POC) function. Comment out when true functions completed. */
