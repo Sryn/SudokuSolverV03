@@ -265,13 +265,32 @@ function createSmallTable(k, l){
 	return tbl;
 }
 
+function addGrid81OptionsToDDL(gridPos, singleDDLarray) {
+	var i;
+	
+    for (i = 0; i < window.grid81[gridPos][5].length; i++) {
+        var atr = document.createElement('option');
+        atr.value = window.grid81[gridPos][5][i];
+        atr.text  = window.grid81[gridPos][5][i];
+//        ddl.appendChild(atr);
+        singleDDLarray[0].appendChild(atr);
+    }
+}
+
 function createDropdown(idNumber, gridPos){
 	var i,
-        ddl = document.createElement('select');
+		singleDDLarray = new Array(1); // need this to pass by reference to another function that changes the ddl
+	
+//    var ddl = document.createElement('select');
     
-	ddl.name = 'ddl' + idNumber;
-	ddl.onchange = function() {cellValueChanged('ddl'+idNumber)};
-    ddl.disabled = window.grid81[gridPos][3];
+	singleDDLarray[0] = document.createElement('select');
+    singleDDLarray[0].name = 'ddl' + idNumber;
+    singleDDLarray[0].onchange = function() {cellValueChanged('ddl'+idNumber)};
+    singleDDLarray[0].disabled = window.grid81[gridPos][3];
+		
+//	ddl.name = 'ddl' + idNumber;
+//	ddl.onchange = function() {cellValueChanged('ddl'+idNumber)};
+//    ddl.disabled = window.grid81[gridPos][3];
 	
 //	for (i=0; i<=9; i++){
 //		var atr = document.createElement('option');
@@ -285,14 +304,18 @@ function createDropdown(idNumber, gridPos){
 //		ddl.appendChild(atr);
 //	}
     
-    for (i=0; i<window.grid81[gridPos][5].length; i++) {
-        var atr = document.createElement('option');
-        atr.value = window.grid81[gridPos][5][i];
-        atr.text  = window.grid81[gridPos][5][i];
-        ddl.appendChild(atr);
-    }
+//    for (i=0; i<window.grid81[gridPos][5].length; i++) {
+//        var atr = document.createElement('option');
+//        atr.value = window.grid81[gridPos][5][i];
+//        atr.text  = window.grid81[gridPos][5][i];
+//        ddl.appendChild(atr);
+//    }
+    
+    addGrid81OptionsToDDL(gridPos, singleDDLarray);
 	
-	return ddl;
+//	return ddl;
+	
+	return singleDDLarray[0];
 }
 
 /* Will return back an array of sequential gridPos numbers */
@@ -380,6 +403,9 @@ function putElemAtThisIndexInArray(elem, index, theArray) {
 
 function pushElemInArrayOrderly(elem, theArray) {
 	/* assume elem is not present in theArray */
+	
+	console.log('In pushElemInArrayOrderly(elem='+elem+', theArray['+theArray+'])');
+	
 	var i,
 		foundPlace = false,
 		whereToPut = 0,
@@ -409,8 +435,6 @@ function pushElemInArrayOrderly(elem, theArray) {
 		whereToPut = theArrayLength;
 	}
 	
-	console.log('In pushElemInArrayOrderly(elem='+elem+', theArray['+theArray+'])');
-	
 //	returnArray = putElemAtThisIndexInArray(elem, whereToPut, theArray);
 	putElemAtThisIndexInArray(elem, whereToPut, theArray);
 	
@@ -422,6 +446,9 @@ function pushElemInArrayOrderly(elem, theArray) {
 
 /* Will return back an array of sequential, non-repeating array of gridPos numbers */
 function getAllDirectlyRelatedCells(arrayPos) {
+	
+	console.log('In getAllDirectlyRelatedCells(arrayPos['+arrayPos+'])');
+	
 	var i, j, 
 //		tempArray,
 		directlyRelatedBoxRowColCells = new Array(3),
@@ -454,6 +481,11 @@ function getAllDirectlyRelatedCells(arrayPos) {
 }
 
 function getChosenValuesFromBoxRowOrCol(boxRowOrCol, whichBoxRowOrCol, chosenValues) {
+	
+	console.log('In getChosenValuesFromBoxRowOrCol(boxRowOrCol='+boxRowOrCol
+			+', whichBoxRowOrCol='+whichBoxRowOrCol
+			+', chosenValues['+chosenValues+'])');
+	
 	var i,
 		aNumber;
 	
@@ -475,6 +507,9 @@ function getChosenValuesFromBoxRowOrCol(boxRowOrCol, whichBoxRowOrCol, chosenVal
 }
 
 function getAllChosenValuesFromArrayPos(arrayPos) {
+	
+	console.log('In getAllChosenValuesFromArrayPos(arrayPos['+arrayPos+'])');
+	
 	var i,
 		currentChosenValues,
 		chosenValues = new Array();
@@ -496,6 +531,8 @@ function getAllNonChosenValuesFromChosenValuesArray(chosenValues) {
 	/* assume chosenValues is either an empty array
 	 * or only has a sequential list of integers */
 	
+	console.log('In getAllNonChosenValuesFromChosenValuesArray(chosenValues['+chosenValues+'])');
+	
 	var i,
 		tmpNonChosenValues,
 		rtnNonChosenValues = new Array();
@@ -509,8 +546,10 @@ function getAllNonChosenValuesFromChosenValuesArray(chosenValues) {
 	
 	tmpNonChosenValues = getStartUpArrayOfDropDownOptions();
 	
+	console.log(' tmpNonChosenValues['+tmpNonChosenValues+']');
+	
 	for (i = 0; i < tmpNonChosenValues.length; i++) {
-		if (checkIfElementIsInArray(tmpNonChosenValues[i], chosenValues)) {
+		if (!checkIfElementIsInArray(tmpNonChosenValues[i], chosenValues)) {
 			rtnNonChosenValues.push(tmpNonChosenValues[i]);
 		}
 	}
@@ -523,7 +562,7 @@ function checkIfTwoArraysAreTheSame(firstArray, secondArray) {
 	
 	var i = 0,
 		result = true,
-		firstArryLength = firstArray.length;
+		firstArrayLength = firstArray.length;
 	
 	if (firstArrayLength == secondArray.length) {
 		if (firstArrayLength > 0) {
@@ -542,6 +581,9 @@ function checkIfTwoArraysAreTheSame(firstArray, secondArray) {
 }
 
 function updateGridPosSelectOptions(gridPos, newSelectOptions) {
+	
+	console.log('In updateGridPosSelectOptions(gridPos='+gridPos+', newSelectOptions['+newSelectOptions+'])');
+	
 	var changeExecuted = false;
 	
 	/* compare newSelectOptions with the existing select options at gridPos in grid81 
@@ -558,11 +600,54 @@ function updateGridPosSelectOptions(gridPos, newSelectOptions) {
 	return changeExecuted;
 }
 
+function translate_gridPos_2_zyzx(gridPos) {
+	
+	console.log('In translate_gridPos_2_zyzx(gridPos='+gridPos+')');
+	
+	return (translate_arrayPos_2_zyzx(translate_gridPos_2_arrayPos(gridPos)));
+}
+
+function updateDDLoptionsAtGridPos(currentDDL, gridPos) {
+	var singleDDLarray = new Array(1),
+		i,
+		currentDDLoptionsLength = currentDDL.length;
+	
+	/* http://www.w3schools.com/jsref/met_select_remove.asp */
+	// clear the currentDDL of existing options
+	for (i = currentDDLoptionsLength-1; i >= 0; i--) {
+		currentDDL.remove(i);
+	}
+	
+	singleDDLarray[0] = currentDDL;
+	
+	addGrid81OptionsToDDL(gridPos, singleDDLarray);
+}
+
 // not implemented
 function updateDOMatTheseGridPos(gridPosArray) {
 	/* for each gridPos in gridPosArray
 	 * update the select options
 	 * at the gridPos in the DOM */
+	
+	console.log('In updateDOMatTheseGridPos(gridPosArray['+gridPosArray+'])');
+	
+	var i,
+		gridPosArrayLength = gridPosArray.length,
+		currentZYZX,
+		currentDDL;
+	
+	if (gridPosArrayLength > 0) {
+		for (i = 0; i < gridPosArrayLength; i++) {
+			
+			console.log(' i='+i+', gridPosArray[i]['+gridPosArray[i]+']');
+			currentZYZX = translate_gridPos_2_zyzx(gridPosArray[i]);
+			
+			console.log(' currentZYZX['+currentZYZX+']');
+			currentDDL = getDDLbyZYZX(currentZYZX);
+			
+			updateDDLoptionsAtGridPos(currentDDL, gridPosArray[i]);
+		}
+	}	
 }
 
 function updateSelectOptionsForTheseGridPos(gridPosArray) {
@@ -625,22 +710,39 @@ function updateRelatedCellsValues(zyzx, newCellValue) {
 	} else {
 		alert('ERROR updateRelatedCellsValues(zyzx['+zyzx+'] check_zyzx_validity=false');
 	}
+	
+}
+
+function refreshDiv(theDiv) {
+	/* theDIV is a string */
+	
+	clearDiv(theDiv);
+	
+	switch(theDiv) {
+	case 'grid81Values': showGrid81Values(); break;
+	case 'arrayValues': showArrayValues(); break;
+	case 'values': showValues(); break;
+	default: alert('ERROR refreshDiv(theDiv='+theDiv+')');
+	}
 }
 
 function cellValueChanged(ddlName){
 //	alert("caller is " + ddlName + ", " + arguments.callee.caller.toString());
 	var zyzx = getZYZXfromDdlName(ddlName),
-		zyzxAsString,
+//		zyzxAsString,
 		newCellValue;
 	
 	console.log('in cellValueChanged(ddlName='+ddlName+')'); // Outputs to browser's console
 	
-	zyzxAsString = zyzx[0].toString() + zyzx[1].toString() + zyzx[2].toString() + zyzx[3].toString();
-	newCellValue = getCellValue(zyzxAsString);
+//	zyzxAsString = zyzx[0].toString() + zyzx[1].toString() + zyzx[2].toString() + zyzx[3].toString();
+//	newCellValue = getCellValue(zyzxAsString);
+	
+	newCellValue = getCellValueByZYZX(zyzx);
 	
 	//	alert("caller is " + zyzx[0] + zyzx[1] + zyzx[2] + zyzx[3]);
 	changeCellClass(zyzx, 'error'); /* Just a proof of concept (POC) function. Comment out when true functions completed. */
 	updateRelatedCellsValues(zyzx, newCellValue);
+	refreshDiv('grid81Values');
 }
 
 function getZYZXfromDdlName(ddlName){
@@ -689,7 +791,8 @@ function clearDiv(divID){
 function showValues(){
 	
 	var showWhere = document.getElementById("values");
-	var ddlName, i=1, z1, z2, y, x, cellValue;
+//	var ddlName;
+	var i=1, z1, z2, y, x, cellValue;
 	
 	clearDiv("values");
 	clearDiv("arrayValues");
@@ -723,9 +826,10 @@ function showValues(){
 				for (x = 0; x <= 2; x++) {
 					/* ddlName formatted like this as it correlates to how the whole table 
 					 * was designed and given coordinates */
-					ddlName = z1.toString() + y.toString() + z2.toString() + x.toString();
+//					ddlName = z1.toString() + y.toString() + z2.toString() + x.toString();
 					i++;
-					cellValue = getCellValue(ddlName);
+//					cellValue = getCellValue(ddlName);
+					cellValue = getCellValueByZYZX(convert4ints2zyzx(z1, y, z2, x));
 					if(cellValue != 0) { /* If not invalid cellValue */
 						updateArrays(z1, y, z2, x, cellValue);
 					}
@@ -743,6 +847,42 @@ function showValues(){
 	
 	showArrayValues();
     showGrid81Values();
+}
+
+function getIDstringNameFromZYZX(prefix, zyzx) {
+	
+	console.log('In getIDstringNameFromZYZX(prefix='+prefix+', zyzx['+zyzx+'])');
+	
+	return (prefix + zyzx[0].toString() + zyzx[1].toString() + zyzx[2].toString() + zyzx[3].toString());
+}
+
+function getDDLbyZYZX(zyzx) {
+	
+	console.log('In getDDLbyZYZX(zyzx['+zyzx+'])');	
+	
+	/* http://stackoverflow.com/questions/5501433/nodelist-object-in-javascript */
+	var ddlCellName = getIDstringNameFromZYZX("ddl", zyzx),
+		nodeList = document.getElementsByName(ddlCellName),
+    	nodeArray = [].slice.call(nodeList),
+		rtnDDL;
+	
+	if(nodeArray.length == 1){
+		rtnDDL = nodeArray[0];
+	} else {
+		alert('ERROR getDDLbyddlName(' + ddlName+ ') nodeArray.length=' + nodeArray.length + '');
+	}
+	
+	return rtnDDL;	
+}
+
+function getCellValueByZYZX(zyzx) {
+	
+	console.log('In getCellValueByZYZX(zyzx['+zyzx+'])');	
+	
+	var respectiveDDL = getDDLbyZYZX(zyzx);
+		cellValue = respectiveDDL.value;
+		
+	return cellValue;
 }
 
 function getCellValue(ddlName){
