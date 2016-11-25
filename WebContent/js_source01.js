@@ -4,6 +4,41 @@
 
 /* http://stackoverflow.com/questions/14643617/create-table-using-javascript */
 
+function resetBoolArray(theArray, defaultBool) {
+	var i;
+	
+	for (i = 0; i < theArray.length; i++) {
+		theArray[i] = defaultBool;
+	}	
+}
+
+function solve() {
+	console.log('In solve()');
+	
+	var i, j,
+		lvlOneIteration,
+		boolArrayLvlDone = new Array(9),
+		tempGrid = new Array(81);
+		
+	for (lvlOneIteration = 1; lvlOneIteration <= 9; lvlOneIteration++) {
+		// for checking from only one option left to nine options left
+		
+		j = 0;
+		resetBoolArray(boolArrayLvlDone, false);
+		
+		while (j < lvlOneIteration) {
+			/* at every lvlOneIteration, check again recursively,
+			 * if any cells have only one (j+1) option left,
+			 * to one less than the current lvlOneIteration */
+			while (stillExistCellsWithTheseNumOfOptionsInTempGrid(j+1, tempGrid)) {
+				
+			}
+			
+			j++;
+		}
+	}
+}
+
 function createArrays() {
 	
 	console.log('In createArrays()');
@@ -794,7 +829,14 @@ function cellValueChanged(ddlName){
 	updateCurrentValueInGrid81(gridPos, newCellValue);
 	
 	//	alert("caller is " + zyzx[0] + zyzx[1] + zyzx[2] + zyzx[3]);
-	changeCellClass(zyzx, 'error'); /* Just a proof of concept (POC) function. Comment out when true functions completed. */
+	
+	/* Just a proof of concept (POC) function. Comment out when true functions completed. */
+	if (newCellValue == '_') {
+		changeCellClass(zyzx, 'default'); 
+	} else {
+		changeCellClass(zyzx, 'error');
+	}
+	
 	updateRelatedCellsValues(zyzx, newCellValue);
 	refreshDiv('grid81Values');
 }
