@@ -810,6 +810,73 @@ function updateCurrentValueInGrid81(gridPos, newCellValue) {
 	window.grid81[gridPos][2] = newCellValue;
 }
 
+function changeCellsClass(theArray, newClassName) {
+	var i,
+		zyzx;
+	
+	for (i = 0; i < theArray.length; i++) {
+		zyzx = translate_gridPos_2_zyzx(theArray[i]);
+		changeCellClass(zyzx, newClassName);
+	}
+}
+
+function showCellsWithOnlyOneOptionLeft() {
+	var i,
+		oneLeftArray = new Array();
+	
+	for (i=0; i<81; i++) {
+		// make sure this cell is one not whose value is already set by user
+		if (window.grid81[i][2] == '_') {
+			// this will filter to cells with only '_' and an int 1-9 as its options
+			if (window.grid81[i][5].length == 2) {
+				oneLeftArray.push(i);
+			}
+		}
+	}
+	
+	if (oneLeftArray.length > 0) {
+		changeCellsClass(oneLeftArray, 'oneLeft');
+	}
+}
+
+function updateGreys() {
+	var i,
+		greyArray = new Array(8); // greyArray[0] = oneOption left .. greyArray[7] = eightOptions left
+	
+	for (i=0; i<8; i++) {
+		greyArray[i] = new Array(); // will hold list of gridPos associated with i+1 many options left
+	}
+	
+	for (i=0; i<81; i++) {
+		
+		// make sure this cell is not one whose value is already set by user
+		if (window.grid81[i][2] == '_') {
+			
+			// this will filter to cells with only between 2 and 9 options, inclusive, and counting '_'
+			if ((window.grid81[i][5].length > 1) && (window.grid81[i][5].length <= 9)) {
+				greyArray[window.grid81[i][5].length - 2].push(i);
+			}
+		}
+	}
+	
+	for (i = 0; i < greyArray.length; i++) {
+		if (greyArray[i].length > 0) {
+			switch(i) {
+			case 0: changeCellsClass(greyArray[i],   'oneLeft'); break;
+			case 1: changeCellsClass(greyArray[i],   'twoLeft'); break;
+			case 2: changeCellsClass(greyArray[i], 'threeLeft'); break;
+			case 3: changeCellsClass(greyArray[i],  'fourLeft'); break;
+			case 4: changeCellsClass(greyArray[i],  'fiveLeft'); break;
+			case 5: changeCellsClass(greyArray[i],   'sixLeft'); break;
+			case 6: changeCellsClass(greyArray[i], 'sevenLeft'); break;
+			case 7: changeCellsClass(greyArray[i], 'eightLeft'); break;
+			default:
+				alert('ERROR updateGreys() greyArray[i='+i+']');
+			}
+		}
+	}
+}
+
 function cellValueChanged(ddlName){
 //	alert("caller is " + ddlName + ", " + arguments.callee.caller.toString());
 	var zyzx = getZYZXfromDdlName(ddlName),
@@ -834,10 +901,11 @@ function cellValueChanged(ddlName){
 	if (newCellValue == '_') {
 		changeCellClass(zyzx, 'default'); 
 	} else {
-		changeCellClass(zyzx, 'error');
+		changeCellClass(zyzx, '_error_');
 	}
 	
 	updateRelatedCellsValues(zyzx, newCellValue);
+	updateGreys();
 	refreshDiv('grid81Values');
 }
 
@@ -860,6 +928,14 @@ function getZYZXfromDdlName(ddlName){
 	return zyzx;
 }
 
+function updateGrid81CellClassName(zyzx, newClassName) {
+	console.log('In updateGrid81CellClassName(zyzx['+zyzx+'], newClassName='+newClassName+')');
+	
+	var gridPos = translate_zyzx_2_gridPos(zyzx[0], zyzx[1], zyzx[2], zyzx[3]);
+	
+	window.grid81[gridPos][4] = newClassName;
+}
+
 function changeCellClass(zyzx, newClassName){
 	var cellTdID, cellTd;
 	
@@ -870,6 +946,7 @@ function changeCellClass(zyzx, newClassName){
 		cellTd = document.getElementById(cellTdID);
 //		cellTd.style.backgroundColor = newClassName;
 		cellTd.className = newClassName;
+		updateGrid81CellClassName(zyzx, newClassName);
 	} else {
 		alert('ERROR changeCellClass(zyzx[' + zyzx + ', newClassName=' + newClassName + '])');
 	}

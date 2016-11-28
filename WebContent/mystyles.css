@@ -18,7 +18,39 @@ td {
 /*     background-color: yellow; */
 }
 
-.error {
+._error_ {
     background-color: red;
 }
 
+.oneLeft {
+/* 	background-color: grey; */
+	background-color: #708090; /* SlateGray */
+}
+
+.twoLeft {
+	background-color: #778899; /* LightSlateGray */
+}
+
+.threeLeft {
+	background-color: #808080; /* Gray */
+}
+
+.fourLeft {
+	background-color: #A9A9A9; /* DarkGray */
+}
+
+.fiveLeft {
+	background-color: #C0C0C0; /* Silver */
+}
+
+.sixLeft {
+	background-color: #D3D3D3; /* LightGray */
+}
+
+.sevenLeft {
+	background-color: #DCDCDC; /* Gainsboro */
+}
+
+.eightLeft {
+	background-color: #F5F5F5; /* WhiteSmoke */
+}
