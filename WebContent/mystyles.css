@@ -22,35 +22,34 @@ td {
     background-color: red;
 }
 
-.oneLeft {
-/* 	background-color: grey; */
-	background-color: #708090; /* SlateGray */
+.oneLeft, .oneTwoEight {
+	background-color: #808080; /* RGB:128,128,128 aka Gray */
 }
 
-.twoLeft {
-	background-color: #778899; /* LightSlateGray */
+.twoLeft, .oneFourFour {
+	background-color: #909090; /* RGB:144,144,144 */
 }
 
-.threeLeft {
-	background-color: #808080; /* Gray */
+.threeLeft, .oneSixZero {
+	background-color: #A0A0A0; /* RGB:160,160,260 */
 }
 
-.fourLeft {
-	background-color: #A9A9A9; /* DarkGray */
+.fourLeft, .oneSevenSix {
+	background-color: #B0B0B0; /* RGB:176,176,176 */
 }
 
-.fiveLeft {
-	background-color: #C0C0C0; /* Silver */
+.fiveLeft, .oneNineTwo {
+	background-color: #C0C0C0; /* RGB:192,192,192 aka Silver */
 }
 
-.sixLeft {
-	background-color: #D3D3D3; /* LightGray */
+.sixLeft, .twoZeroEight {
+	background-color: #D0D0D0; /* RGB:208,208,208 */
 }
 
-.sevenLeft {
-	background-color: #DCDCDC; /* Gainsboro */
+.sevenLeft, .twoTwoFour {
+	background-color: #E0E0E0; /* RGB:224,224,224 */
 }
 
-.eightLeft {
-	background-color: #F5F5F5; /* WhiteSmoke */
+.eightLeft, .twoFourZero {
+	background-color: #F0F0F0; /* RGB:240,240,240 */
 }
