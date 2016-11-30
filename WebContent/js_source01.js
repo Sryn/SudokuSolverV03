@@ -4,11 +4,11 @@
 
 /* http://stackoverflow.com/questions/14643617/create-table-using-javascript */
 
-function resetBoolArray(theArray, defaultBool) {
+function initialiaseArray(theArray, initialValue) {
 	var i;
 	
 	for (i = 0; i < theArray.length; i++) {
-		theArray[i] = defaultBool;
+		theArray[i] = initialValue;
 	}	
 }
 
@@ -24,7 +24,7 @@ function solve() {
 		// for checking from only one option left to nine options left
 		
 		j = 0;
-		resetBoolArray(boolArrayLvlDone, false);
+		initialiaseArray(boolArrayLvlDone, false);
 		
 		while (j < lvlOneIteration) {
 			/* at every lvlOneIteration, check again recursively,
