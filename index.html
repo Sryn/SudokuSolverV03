@@ -9,7 +9,15 @@
 <body onload="initialise()">
 <h1>Sudoku Solver v03</h1>
 <div id='table01'></div>
-<br>
+
+<table id="stepTable">
+<tr class="noborders">
+<td><input type="button" onClick="goPrev()" value="Prev" /></td>
+<td><h3>|&nbsp;<label id="stepCount">0</label>&nbsp;step(s)&nbsp;|</h3></td>
+<td><input type="button" onclick="goNext()" value="Next" /></td>
+</tr>
+</table>
+
 <input type="button" onclick="showValues()" value="Solve"/>
 <br>
 <h2>Table Values</h2>
@@ -17,6 +25,9 @@
 <br>
 <h2>Array Values</h2>
 <div id='arrayValues'></div>
+<br>
+<h2>stepCountArray</h2>
+<div id='stepCountArray'></div>
 <br>
 <h2>grid81 Values</h2>
 <div id='grid81Values'></div>

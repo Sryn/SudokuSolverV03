@@ -4,6 +4,27 @@
 
 /* http://stackoverflow.com/questions/14643617/create-table-using-javascript */
 
+// http://www.i-programmer.info/programming/javascript/1674-javascript-data-structures-stacks-queues-and-deques.html
+function Stack() {
+	this.stac=new Array();
+	
+	this.pop=function(){
+		return this.stac.pop();
+	}
+	
+	this.push=function(item){
+		this.stac.push(item);
+	}
+	
+	this.count = function() {
+		return this.stac.length;
+	}
+}
+
+function pushIntoPrevStack(newPrevArray) {
+	window.prevStack.push(newPrevArray);
+}
+
 function initialiaseArray(theArray, initialValue) {
 	var i;
 	
@@ -61,6 +82,30 @@ function createArrays() {
 	}
 	
 	createGrid81Array();
+}
+
+function createStepCountArray() {
+	console.log('In createStepCountArray()');
+	
+	var i, j;
+	
+	window.stepCount = 0;
+	window.prevStack = new Stack();
+	window.nextStack = new Stack();
+	window.stepCountArray = new Array();
+	
+	for(i=0; i<81; i++) {
+		window.stepCountArray[i] = new Array();
+		
+		for(j=0; j<3; j++) {
+			
+			if(j == 1) {
+				window.stepCountArray[i][j] = '_';
+			} else {
+				window.stepCountArray[i][j] = '*';				
+			}
+		}
+	}
 }
 
 function getStartUpArrayOfDropDownOptions(){
@@ -175,6 +220,50 @@ function showArrayValues(){
 //		showWhere.appendChild(document.createElement('br'));
 		showWhere.appendChild(showBigArray(j));
 	}
+}
+
+function showStepCountArray() {
+	console.log('In showStepCountArray()');
+	
+	var showWhere = document.getElementById("stepCountArray"),
+		h4Label = document.createElement('h4'),
+		i, j, k;
+	
+	for(j=0; j<9; j++) {
+		for(k=0; k<9; k++) {
+			i = (j * 9) + k;
+			h4Label.appendChild(document.createTextNode(window.stepCountArray[i][0]));
+			h4Label.appendChild(document.createTextNode('|'));
+			h4Label.appendChild(document.createTextNode(window.stepCountArray[i][1]));
+			h4Label.appendChild(document.createTextNode('|'));
+			h4Label.appendChild(document.createTextNode(window.stepCountArray[i][2]));
+			if(checkIfMultipleOf9(i)) {
+				h4Label.appendChild(document.createElement('br'));
+			} else {
+				h4Label.appendChild(document.createTextNode(', '));
+			}
+		}
+	}
+	
+	showWhere.appendChild(document.createTextNode('prevStack.length = '));
+	showWhere.appendChild(document.createTextNode(window.prevStack.count()));
+	showWhere.appendChild(document.createElement('br'));
+	
+	showWhere.appendChild(document.createTextNode('nextStack.length = '));
+	showWhere.appendChild(document.createTextNode(window.nextStack.count()));
+	showWhere.appendChild(document.createElement('br'));
+	
+	showWhere.appendChild(h4Label);	
+}
+
+function checkIfMultipleOf9(value) {
+	var rtnBool = false;
+	
+	if((value+1)%9 == 0) {
+		rtnBool = true;
+	}
+	
+	return rtnBool;
 }
 
 function showBigArray(j){
@@ -801,6 +890,7 @@ function refreshDiv(theDiv) {
 	switch(theDiv) {
 	case 'grid81Values': showGrid81Values(); break;
 	case 'arrayValues': showArrayValues(); break;
+	case 'stepCountArray': showStepCountArray(); break;
 	case 'values': showValues(); break;
 	default: alert('ERROR refreshDiv(theDiv='+theDiv+')');
 	}
@@ -808,6 +898,10 @@ function refreshDiv(theDiv) {
 
 function updateCurrentValueInGrid81(gridPos, newCellValue) {
 	window.grid81[gridPos][2] = newCellValue;
+}
+
+function getCurrentValueInGrid81(gridPos) {
+	return window.grid81[gridPos][2];
 }
 
 function changeCellsClass(theArray, newClassName) {
@@ -877,10 +971,30 @@ function updateGreys() {
 	}
 }
 
+function updateStepCountArray(gridPos, oldCellValue, newCellValue) {
+	console.log('in updateStepCountArray(gridPos='+gridPos
+			+', oldCellValue='+oldCellValue
+			+', newCellValue='+newCellValue
+			+')');
+	
+	if(window.stepCountArray[gridPos][1] != oldCellValue) {
+		console.log('ERROR: stepCountArray[gridPos][1]='+window.stepCountArray[gridPos][1]+' != oldCellValue');
+	}
+	
+	window.stepCountArray[gridPos][0] = window.stepCountArray[gridPos][1];
+	window.stepCountArray[gridPos][1] = newCellValue;
+}
+
+function updateStepCount(value) {
+	window.stepCount += value;
+	changeStepCountLabel(window.stepCount);
+}
+
 function cellValueChanged(ddlName){
 //	alert("caller is " + ddlName + ", " + arguments.callee.caller.toString());
 	var zyzx = getZYZXfromDdlName(ddlName),
 //		zyzxAsString,
+		oldCellValue,
 		newCellValue,
 		gridPos;
 	
@@ -893,6 +1007,11 @@ function cellValueChanged(ddlName){
 	
 	gridPos = translate_zyzx_2_gridPos(zyzx[0], zyzx[1], zyzx[2], zyzx[3]);
 	
+	oldCellValue = getCurrentValueInGrid81(gridPos);
+	
+	updateStepCount(1);
+	updateStepCountArray(gridPos, oldCellValue, newCellValue);
+	pushIntoPrevStack(new Array(gridPos, oldCellValue, newCellValue));
 	updateCurrentValueInGrid81(gridPos, newCellValue);
 	
 	//	alert("caller is " + zyzx[0] + zyzx[1] + zyzx[2] + zyzx[3]);
@@ -906,6 +1025,8 @@ function cellValueChanged(ddlName){
 	
 	updateRelatedCellsValues(zyzx, newCellValue);
 	updateGreys();
+	
+	refreshDiv('stepCountArray');
 	refreshDiv('grid81Values');
 }
 
@@ -1198,13 +1319,21 @@ function findBoxIndex(arrayPos){
 	return (((arrayPos[1]%3)*3)+(arrayPos[2]%3)); /* should return a value between 0-8 */
 }
 
+function changeStepCountLabel(count) {
+	document.getElementById('stepCount').innerHTML = count;
+}
+
 function initialise() {
 	
 	console.log('In initialise()');
 	
+	createStepCountArray();
 	createArrays();
 	createTable();
+	showStepCountArray();
 	showArrayValues();
     showGrid81Values();
+    
+//    changeStepCountLabel(0);
 }
 

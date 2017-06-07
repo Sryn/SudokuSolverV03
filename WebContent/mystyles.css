@@ -1,5 +1,13 @@
 /* mystyles.css */
 
+#stepTable {
+	border-color: transparent;
+}
+
+.noborders td {
+    border-color: transparent;
+}
+    
 table {
 	width: 100px;
 	border-width: 1px;

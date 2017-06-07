@@ -5,6 +5,10 @@ Page at https://sryn.github.io/SudokuSolverV03/
 
 Commit History Comments:
 
+* June 7, 2017
+-- Implemented arrays and stacks to track changes
+-- prev and next buttons not implemented yet
+
 * Jan 9, 2017
 -- Showing 'Commit History Comments' in this README.md
 
