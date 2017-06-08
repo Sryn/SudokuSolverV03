@@ -16,13 +16,24 @@ function Stack() {
 		this.stac.push(item);
 	}
 	
-	this.count = function() {
+	this.length = function() {
 		return this.stac.length;
+	}
+	
+	// https://appendto.com/2016/02/empty-array-javascript/?nabe=4834138299564032:0,5488687288942592:0,5685334715400192:1,6035677076783104:0,6118337346273280:1&utm_referrer=https%3A%2F%2Fwww.google.com.sg%2F
+	this.clear = function() {
+		for(var i=this.stac.length; i>0; i--) {
+			this.stac.pop();
+		}
 	}
 }
 
 function pushIntoPrevStack(newPrevArray) {
 	window.prevStack.push(newPrevArray);
+}
+
+function pushIntoNextStack(newNextArray) {
+	window.nextStack.push(newNextArray);
 }
 
 function initialiaseArray(theArray, initialValue) {
@@ -246,11 +257,11 @@ function showStepCountArray() {
 	}
 	
 	showWhere.appendChild(document.createTextNode('prevStack.length = '));
-	showWhere.appendChild(document.createTextNode(window.prevStack.count()));
+	showWhere.appendChild(document.createTextNode(window.prevStack.length()));
 	showWhere.appendChild(document.createElement('br'));
 	
 	showWhere.appendChild(document.createTextNode('nextStack.length = '));
-	showWhere.appendChild(document.createTextNode(window.nextStack.count()));
+	showWhere.appendChild(document.createTextNode(window.nextStack.length()));
 	showWhere.appendChild(document.createElement('br'));
 	
 	showWhere.appendChild(h4Label);	
@@ -935,9 +946,9 @@ function showCellsWithOnlyOneOptionLeft() {
 
 function updateGreys() {
 	var i,
-		greyArray = new Array(8); // greyArray[0] = oneOption left .. greyArray[7] = eightOptions left
+		greyArray = new Array(9); // greyArray[0] = oneOption left .. greyArray[7] = eightOptions left
 	
-	for (i=0; i<8; i++) {
+	for (i=0; i<9; i++) {
 		greyArray[i] = new Array(); // will hold list of gridPos associated with i+1 many options left
 	}
 	
@@ -946,8 +957,8 @@ function updateGreys() {
 		// make sure this cell is not one whose value is already set by user
 		if (window.grid81[i][2] == '_') {
 			
-			// this will filter to cells with only between 2 and 9 options, inclusive, and counting '_'
-			if ((window.grid81[i][5].length > 1) && (window.grid81[i][5].length <= 9)) {
+			// this will filter to cells with only between 2 and 10 options, inclusive, and counting '_'
+			if ((window.grid81[i][5].length > 1) && (window.grid81[i][5].length <= 10)) {
 				greyArray[window.grid81[i][5].length - 2].push(i);
 			}
 		}
@@ -964,6 +975,7 @@ function updateGreys() {
 			case 5: changeCellsClass(greyArray[i],   'sixLeft'); break;
 			case 6: changeCellsClass(greyArray[i], 'sevenLeft'); break;
 			case 7: changeCellsClass(greyArray[i], 'eightLeft'); break;
+			case 8: changeCellsClass(greyArray[i],   'default'); break;
 			default:
 				alert('ERROR updateGreys() greyArray[i='+i+']');
 			}
@@ -981,8 +993,17 @@ function updateStepCountArray(gridPos, oldCellValue, newCellValue) {
 		console.log('ERROR: stepCountArray[gridPos][1]='+window.stepCountArray[gridPos][1]+' != oldCellValue');
 	}
 	
-	window.stepCountArray[gridPos][0] = window.stepCountArray[gridPos][1];
+	window.stepCountArray[gridPos][0] = oldCellValue;
 	window.stepCountArray[gridPos][1] = newCellValue;
+	window.stepCountArray[gridPos][2] = '*';
+}
+
+function revertStepCountArray(gridPos, prevCellValue, currCellValue) {
+	console.log('In revertStepCountArray(gridPos='+gridPos+', prevCellValue='+prevCellValue+', currCellValue='+currCellValue+')');
+
+	window.stepCountArray[gridPos][0] = '*';
+	window.stepCountArray[gridPos][1] = prevCellValue;
+	window.stepCountArray[gridPos][2] = currCellValue;
 }
 
 function updateStepCount(value) {
@@ -1016,6 +1037,27 @@ function cellValueChanged(ddlName){
 	
 	//	alert("caller is " + zyzx[0] + zyzx[1] + zyzx[2] + zyzx[3]);
 	
+	/* Just a proof of concept (POC) function. Comment out when true functions completed. 
+	if (newCellValue == '_') {
+		changeCellClass(zyzx, 'default'); 
+	} else {
+		changeCellClass(zyzx, '_error_');
+	}
+	
+	updateRelatedCellsValues(zyzx, newCellValue);
+	updateGreys();
+	
+	refreshDiv('stepCountArray');
+	refreshDiv('grid81Values');*/
+	
+	doCellValueChanged(gridPos, oldCellValue, newCellValue);
+}
+
+function doCellValueChanged(gridPos, oldCellValue, newCellValue) {
+	console.log('In doCellValueChanged(gridPos='+gridPos+', oldCellValue='+oldCellValue+', newCellValue='+newCellValue+')');
+	
+	var zyzx = translate_gridPos_2_zyzx(gridPos);
+	
 	/* Just a proof of concept (POC) function. Comment out when true functions completed. */
 	if (newCellValue == '_') {
 		changeCellClass(zyzx, 'default'); 
@@ -1028,6 +1070,48 @@ function cellValueChanged(ddlName){
 	
 	refreshDiv('stepCountArray');
 	refreshDiv('grid81Values');
+}
+
+function changeCellValue(gridPos, newCellValue) {
+	console.log('In changeCellValue(gridPos='+gridPos+', newCellValue='+newCellValue+')');
+	
+	var zyzx = translate_gridPos_2_zyzx(gridPos);
+	
+	// https://stackoverflow.com/a/10029429/5341492
+	var cell = getDDLbyZYZX(zyzx);
+	var opts = cell.options.length;
+	for (var i=0; i<opts; i++){
+	    if (cell.options[i].value == newCellValue){
+	        cell.options[i].selected = true;
+	        break;
+	    }
+	}	
+}
+
+function doPrevStep(gridPos, prevCellValue, currCellValue) {
+	console.log('In doPrevStep(gridPos='+gridPos+', prevCellValue='+prevCellValue+', currCellValue='+currCellValue+')');
+	
+	changeCellValue(gridPos, prevCellValue);
+	
+	updateStepCount(-1);
+	revertStepCountArray(gridPos, prevCellValue, currCellValue);
+	pushIntoNextStack(new Array(gridPos, prevCellValue, currCellValue));
+	updateCurrentValueInGrid81(gridPos, prevCellValue);
+	
+	doCellValueChanged(gridPos, currCellValue, prevCellValue);
+}
+
+function doNextStep(gridPos, currCellValue, nextCellValue) {
+	console.log('In doNextStep(gridPos='+gridPos+', currCellValue='+currCellValue+', nextCellValue='+nextCellValue+')');
+	
+	changeCellValue(gridPos, nextCellValue);
+	
+	updateStepCount(1);
+	updateStepCountArray(gridPos, currCellValue, nextCellValue)
+	pushIntoPrevStack(new Array(gridPos, currCellValue, nextCellValue));
+	updateCurrentValueInGrid81(gridPos, nextCellValue);
+	
+	doCellValueChanged(gridPos, currCellValue, nextCellValue);
 }
 
 function getZYZXfromDdlName(ddlName){
@@ -1323,6 +1407,26 @@ function changeStepCountLabel(count) {
 	document.getElementById('stepCount').innerHTML = count;
 }
 
+function goPrev() {
+	console.log('In goPrev() with window.prevStack.length()='+window.prevStack.length());
+	
+	if(window.prevStack.length() > 0) {
+		var prevStep = window.prevStack.pop();
+		
+		doPrevStep(prevStep[0], prevStep[1], prevStep[2]);
+	}
+}
+
+function goNext() {
+	console.log('In goNext() with window.nextStack.length()='+window.nextStack.length());
+	
+	if(window.nextStack.length() > 0) {
+		var nextStep = window.nextStack.pop();
+		
+		doNextStep(nextStep[0], nextStep[1], nextStep[2]);
+	}
+}
+
 function initialise() {
 	
 	console.log('In initialise()');
@@ -1334,6 +1438,5 @@ function initialise() {
 	showArrayValues();
     showGrid81Values();
     
-//    changeStepCountLabel(0);
 }
 
