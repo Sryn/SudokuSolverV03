@@ -101,6 +101,7 @@ function createStepCountArray() {
 	var i, j;
 	
 	window.stepCount = 0;
+	window.nextStepCount = 0;
 	window.prevStack = new Stack();
 	window.nextStack = new Stack();
 	window.stepCountArray = new Array();
@@ -1007,8 +1008,34 @@ function revertStepCountArray(gridPos, prevCellValue, currCellValue) {
 }
 
 function updateStepCount(value) {
-	window.stepCount += value;
-	changeStepCountLabel(window.stepCount);
+	if(value == 0) {
+		window.stepCount = value;
+	} else {
+		window.stepCount += value;
+	}
+	changeStepCountLabel(window.stepCount);		
+}
+
+function updateNextStepCount(value) {
+	if(value == 0) {
+		window.nextStepCount = value;
+	} else {
+		window.nextStepCount += value;
+	}
+	changeNextStepCountLabel(window.nextStepCount);
+}
+
+function resetNextStepCount(newCellValue) {
+	if(window.nextStack.length() > 0) {
+		var nextStep = getNext();
+
+		if(nextStep[2] == newCellValue) {
+			updateNextStepCount(-1);
+		} else {
+			window.nextStack.clear();
+			updateNextStepCount(0);
+		}
+	}
 }
 
 function cellValueChanged(ddlName){
@@ -1031,6 +1058,7 @@ function cellValueChanged(ddlName){
 	oldCellValue = getCurrentValueInGrid81(gridPos);
 	
 	updateStepCount(1);
+	resetNextStepCount(newCellValue);
 	updateStepCountArray(gridPos, oldCellValue, newCellValue);
 	pushIntoPrevStack(new Array(gridPos, oldCellValue, newCellValue));
 	updateCurrentValueInGrid81(gridPos, newCellValue);
@@ -1094,6 +1122,7 @@ function doPrevStep(gridPos, prevCellValue, currCellValue) {
 	changeCellValue(gridPos, prevCellValue);
 	
 	updateStepCount(-1);
+	updateNextStepCount(1);
 	revertStepCountArray(gridPos, prevCellValue, currCellValue);
 	pushIntoNextStack(new Array(gridPos, prevCellValue, currCellValue));
 	updateCurrentValueInGrid81(gridPos, prevCellValue);
@@ -1107,6 +1136,7 @@ function doNextStep(gridPos, currCellValue, nextCellValue) {
 	changeCellValue(gridPos, nextCellValue);
 	
 	updateStepCount(1);
+	updateNextStepCount(-1);
 	updateStepCountArray(gridPos, currCellValue, nextCellValue)
 	pushIntoPrevStack(new Array(gridPos, currCellValue, nextCellValue));
 	updateCurrentValueInGrid81(gridPos, nextCellValue);
@@ -1407,6 +1437,10 @@ function changeStepCountLabel(count) {
 	document.getElementById('stepCount').innerHTML = count;
 }
 
+function changeNextStepCountLabel(count) {
+	document.getElementById('nextStepCount').innerHTML = count;
+}
+
 function goPrev() {
 	console.log('In goPrev() with window.prevStack.length()='+window.prevStack.length());
 	
@@ -1424,6 +1458,14 @@ function goNext() {
 		var nextStep = window.nextStack.pop();
 		
 		doNextStep(nextStep[0], nextStep[1], nextStep[2]);
+	}
+}
+
+function getNext() {
+	if(window.nextStack.length() > 0) {
+		var nextStep = window.nextStack.pop();
+		
+		return nextStep;
 	}
 }
 
