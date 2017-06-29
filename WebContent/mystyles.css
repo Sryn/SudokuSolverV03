@@ -30,6 +30,10 @@ td {
     background-color: red;
 }
 
+._input_ {
+    background-color: purple;
+}
+
 .oneLeft, .oneTwoEight {
 	background-color: #808080; /* RGB:128,128,128 aka Gray */
 }

@@ -44,6 +44,76 @@ function initialiaseArray(theArray, initialValue) {
 	}	
 }
 
+function copyGrid81toTempGrid81(fromGrid, toGrid) {
+	if(fromGrid.length == toGrid.length) {
+		for(var i=0; i<fromGrid.length; i++) {
+			toGrid[i] = fromGrid[i];
+		}
+	}
+}
+
+function findOption(level, theGrid, toSolveQueue) {
+	console.log('findOption(level=%s, theGrid.length=%s, toSolveQueue.length=%s)'
+		, level, theGrid.length, toSolveQueue.length());
+
+	for(var i=0; i<theGrid.length; i++) {
+		if((theGrid[i][5].length == level+1) && theGrid[i][2] == '_') {
+			toSolveQueue.push(i);
+		}
+	}
+
+	if(toSolveQueue.length() > 0) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+function getRandomNumber(inclusiveLowerBound, inclusiveUpperBound) {
+	console.log('In getRandomNumber(inclusiveLowerBound='+inclusiveLowerBound
+		+', inclusiveUpperBound='+inclusiveUpperBound+')');
+	return Math.floor((Math.random() * inclusiveUpperBound) + inclusiveLowerBound);
+}
+
+function chooseOneFromOptions(options) {
+	console.log('In chooseOneFromOptions(options='+options+')');
+	var chosenOption = '_', randomNumber;
+
+	if(options.length > 2) {
+		randomNumber = getRandomNumber(1, options.length-1);
+		chosenOption = options[randomNumber];
+	}
+
+	return chosenOption;
+}
+
+function getNewCellValue(theCell, oldCellValue) {
+	console.log('In getNewCellValue(theCell='+theCell
+		+', oldCellValue='+oldCellValue+')');
+	var newCellValue = '_';
+	if(window.grid81[theCell][5].length == 2) {
+		newCellValue = window.grid81[theCell][5][1];
+	} else if(window.grid81[theCell][5].length > 2) {
+		newCellValue = chooseOneFromOptions(window.grid81[theCell][5]);
+	}
+
+	return newCellValue;
+}
+
+function stillCellsWith_() {
+	console.log('In stillCellsWith_()');
+	var found_ = false; i=0;
+
+	while(!found_ && i<window.grid81.length) {
+		if(window.grid81[i][2] == '_') {
+			found_ = true;
+		}
+		i++;
+	}
+
+	return found_;
+}
+
 function solve() {
 	console.log('In solve()');
 	
@@ -68,6 +138,56 @@ function solve() {
 			
 			j++;
 		}
+	}
+}
+
+function solve2() {
+	console.log('In solve2()');
+
+	var level=1, nextCell, newCellValue, oldCellValue, repeat=0,
+		tempGrid81 = new Array(81);
+
+	copyGrid81toTempGrid81(window.grid81, tempGrid81);
+	//console.log(tempGrid81[0]);
+	toSolveQueue = new Stack();
+	while((level <= 9) && stillCellsWith_()) {
+		repeat=0;
+		if(findOption(level, window.grid81, toSolveQueue) /*&& repeat<10*/) {
+			level = 1; // reset options to find back to one
+			console.log('  repeat='+ repeat++ 
+				+' level='+level
+				+' toSolveQueue.length()='+toSolveQueue.length());
+
+			while(toSolveQueue.length() > 0) {
+				nextCell = toSolveQueue.pop();
+				oldCellValue = getCurrentValueInGrid81(nextCell);
+				newCellValue = getNewCellValue(nextCell, oldCellValue);
+				if(newCellValue != '_') {
+					console.log('  changing value in cell '+nextCell
+						+' from '+oldCellValue+' to '+newCellValue);
+
+					changeCellValue(nextCell, newCellValue);
+			
+					updateStepCount(1);
+					resetNextStepCount(newCellValue);
+					updateStepCountArray(nextCell, oldCellValue, newCellValue);
+					pushIntoPrevStack(new Array(nextCell, oldCellValue, newCellValue));
+					updateCurrentValueInGrid81(nextCell, newCellValue);
+			
+					doCellValueChanged(nextCell, oldCellValue, newCellValue);
+				} else {
+					console.log('  cannot get newCellValue in cell '+nextCell);
+				}
+			}
+		} else {
+			// cannot find cell with only one option
+			// so increase options to find
+			level++;
+		}
+	} // until cannot find cells with 9 number options OR no cells with '_'
+
+	if(stillCellsWith_()) {
+		console.log('Cannot solve this (Yet?)');
 	}
 }
 
@@ -180,7 +300,7 @@ function translate_gridPos_2_arrayPos(gridPos){
 
 function showGrid81Values(){
 	
-	console.log('In showGrid81Values()');
+	// console.log('In showGrid81Values()');
 	
     var showWhere = document.getElementById("grid81Values"),
         h4label = document.createElement('h4'),
@@ -218,7 +338,7 @@ function showGrid81Values(){
 
 function showArrayValues(){
 
-	console.log('In showArrayValues()');
+	// console.log('In showArrayValues()');
 	
 	var showWhere = document.getElementById("arrayValues"),
 		arrayTopLabel = ["Box", "Row", "Col"],
@@ -235,7 +355,7 @@ function showArrayValues(){
 }
 
 function showStepCountArray() {
-	console.log('In showStepCountArray()');
+	// console.log('In showStepCountArray()');
 	
 	var showWhere = document.getElementById("stepCountArray"),
 		h4Label = document.createElement('h4'),
@@ -474,7 +594,7 @@ function getDirectlyRelatedBoxCells(boxPos) {
 		directlyRelatedBoxCells[i] = boxPosInitialValue + (i % 3) + (Math.floor(i / 3) * 9);
 	}
 	
-	console.log('  directlyRelatedBoxCells=' + directlyRelatedBoxCells);
+	// console.log('  directlyRelatedBoxCells=' + directlyRelatedBoxCells);
 	
 	return directlyRelatedBoxCells;
 }
@@ -489,7 +609,7 @@ function getDirectlyRelatedRowCells(rowPos) {
 		directlyRelatedRowCells[i] = (rowPosTimesNine) + i;
 	}
 
-	console.log('  directlyRelatedRowCells=' + directlyRelatedRowCells);
+	// console.log('  directlyRelatedRowCells=' + directlyRelatedRowCells);
 	
 	return directlyRelatedRowCells;
 }
@@ -503,7 +623,7 @@ function getDirectlyRelatedColCells(colPos) {
 		directlyRelatedColCells[i] = colPos + (i * 9);
 	}
 	
-	console.log('  directlyRelatedColCells=' + directlyRelatedColCells);
+	// console.log('  directlyRelatedColCells=' + directlyRelatedColCells);
 	
 	return directlyRelatedColCells;
 }
@@ -547,7 +667,7 @@ function putElemAtThisIndexInArray(elem, index, theArray) {
 function pushElemInArrayOrderly(elem, theArray) {
 	/* assume elem is not present in theArray */
 	
-	console.log('In pushElemInArrayOrderly(elem='+elem+', theArray['+theArray+'])');
+	// console.log('In pushElemInArrayOrderly(elem='+elem+', theArray['+theArray+'])');
 	
 	var i,
 		foundPlace = false,
@@ -581,7 +701,7 @@ function pushElemInArrayOrderly(elem, theArray) {
 //	returnArray = putElemAtThisIndexInArray(elem, whereToPut, theArray);
 	putElemAtThisIndexInArray(elem, whereToPut, theArray);
 	
-	console.log(' After processing: theArray['+theArray+']');
+	// console.log(' After processing: theArray['+theArray+']');
 //	console.log('After processing: returnArray['+returnArray+']');
 	
 //	return returnArray;
@@ -590,7 +710,7 @@ function pushElemInArrayOrderly(elem, theArray) {
 /* Will return back an array of sequential, non-repeating array of gridPos numbers */
 function getAllDirectlyRelatedCells(arrayPos) {
 	
-	console.log('In getAllDirectlyRelatedCells(arrayPos['+arrayPos+'])');
+	// console.log('In getAllDirectlyRelatedCells(arrayPos['+arrayPos+'])');
 	
 	var i, j, 
 //		tempArray,
@@ -624,16 +744,16 @@ function getAllDirectlyRelatedCells(arrayPos) {
 	}
 	
 //	console.log('In getAllDirectlyRelatedCells(arrayPos['+arrayPos+']) allDirectlyRelatedCells['+allDirectlyRelatedCells+']');
-	console.log(' allDirectlyRelatedCells['+allDirectlyRelatedCells+']');
+	// console.log(' allDirectlyRelatedCells['+allDirectlyRelatedCells+']');
 	
 	return allDirectlyRelatedCells;
 }
 
 function getChosenValuesFromBoxRowOrCol(boxRowOrCol, whichBoxRowOrCol, chosenValues) {
 	
-	console.log('In getChosenValuesFromBoxRowOrCol(boxRowOrCol='+boxRowOrCol
-			+', whichBoxRowOrCol='+whichBoxRowOrCol
-			+', chosenValues['+chosenValues+'])');
+	// console.log('In getChosenValuesFromBoxRowOrCol(boxRowOrCol='+boxRowOrCol
+	// 		+', whichBoxRowOrCol='+whichBoxRowOrCol
+	// 		+', chosenValues['+chosenValues+'])');
 	
 	var i,
 		aNumber;
@@ -657,7 +777,7 @@ function getChosenValuesFromBoxRowOrCol(boxRowOrCol, whichBoxRowOrCol, chosenVal
 
 function getAllChosenValuesFromArrayPos(arrayPos) {
 	
-	console.log('In getAllChosenValuesFromArrayPos(arrayPos['+arrayPos+'])');
+	// console.log('In getAllChosenValuesFromArrayPos(arrayPos['+arrayPos+'])');
 	
 	var i,
 		currentChosenValues,
@@ -680,7 +800,7 @@ function getAllNonChosenValuesFromChosenValuesArray(chosenValues) {
 	/* assume chosenValues is either an empty array
 	 * or only has a sequential list of integers */
 	
-	console.log('In getAllNonChosenValuesFromChosenValuesArray(chosenValues['+chosenValues+'])');
+	// console.log('In getAllNonChosenValuesFromChosenValuesArray(chosenValues['+chosenValues+'])');
 	
 	var i,
 		tmpNonChosenValues,
@@ -695,7 +815,7 @@ function getAllNonChosenValuesFromChosenValuesArray(chosenValues) {
 	
 	tmpNonChosenValues = getStartUpArrayOfDropDownOptions();
 	
-	console.log(' tmpNonChosenValues['+tmpNonChosenValues+']');
+	// console.log(' tmpNonChosenValues['+tmpNonChosenValues+']');
 	
 	for (i = 0; i < tmpNonChosenValues.length; i++) {
 		if (!checkIfElementIsInArray(tmpNonChosenValues[i], chosenValues)) {
@@ -731,7 +851,7 @@ function checkIfTwoArraysAreTheSame(firstArray, secondArray) {
 
 function updateGridPosSelectOptions(gridPos, newSelectOptions) {
 	
-	console.log('In updateGridPosSelectOptions(gridPos='+gridPos+', newSelectOptions['+newSelectOptions+'])');
+	// console.log('In updateGridPosSelectOptions(gridPos='+gridPos+', newSelectOptions['+newSelectOptions+'])');
 	
 	var changeExecuted = false;
 	
@@ -751,7 +871,7 @@ function updateGridPosSelectOptions(gridPos, newSelectOptions) {
 
 function translate_gridPos_2_zyzx(gridPos) {
 	
-	console.log('In translate_gridPos_2_zyzx(gridPos='+gridPos+')');
+	// console.log('In translate_gridPos_2_zyzx(gridPos='+gridPos+')');
 	
 	return (translate_arrayPos_2_zyzx(translate_gridPos_2_arrayPos(gridPos)));
 }
@@ -794,10 +914,10 @@ function updateDOMatTheseGridPos(gridPosArray) {
 	if (gridPosArrayLength > 0) {
 		for (i = 0; i < gridPosArrayLength; i++) {
 			
-			console.log(' i='+i+', gridPosArray[i]['+gridPosArray[i]+']');
+			// console.log(' i='+i+', gridPosArray[i]['+gridPosArray[i]+']');
 			currentZYZX = translate_gridPos_2_zyzx(gridPosArray[i]);
 			
-			console.log(' currentZYZX['+currentZYZX+']');
+			// console.log(' currentZYZX['+currentZYZX+']');
 			currentDDL = getDDLbyZYZX(currentZYZX);
 			
 			updateDDLoptionsAtGridPos(currentDDL, gridPosArray[i]);
@@ -835,7 +955,7 @@ function updateSelectOptionsForTheseGridPos(gridPosArray) {
 				pushElemInArrayOrderly(window.grid81[gridPosArray[i]][2], currentNonChosenValues);
 			}
 			
-			console.log('  currentNonChosenValues['+currentNonChosenValues+']');
+			// console.log('  currentNonChosenValues['+currentNonChosenValues+']');
 			
 			// save that array as the selectOptions for that gridPos in the grid81 array
 			gridPosChangedBoolean = updateGridPosSelectOptions(gridPosArray[i], currentNonChosenValues);
@@ -1093,9 +1213,15 @@ function doCellValueChanged(gridPos, oldCellValue, newCellValue) {
 		changeCellClass(zyzx, '_error_');
 	}
 	
+	if(oldCellValue == 'i') {
+		changeCellClass(zyzx, '_input_'); 
+	}
+
 	updateRelatedCellsValues(zyzx, newCellValue);
 	updateGreys();
 	
+	showValues();
+
 	refreshDiv('stepCountArray');
 	refreshDiv('grid81Values');
 }
@@ -1164,7 +1290,7 @@ function getZYZXfromDdlName(ddlName){
 }
 
 function updateGrid81CellClassName(zyzx, newClassName) {
-	console.log('In updateGrid81CellClassName(zyzx['+zyzx+'], newClassName='+newClassName+')');
+	// console.log('In updateGrid81CellClassName(zyzx['+zyzx+'], newClassName='+newClassName+')');
 	
 	var gridPos = translate_zyzx_2_gridPos(zyzx[0], zyzx[1], zyzx[2], zyzx[3]);
 	
@@ -1259,14 +1385,14 @@ function showValues(){
 
 function getIDstringNameFromZYZX(prefix, zyzx) {
 	
-	console.log('In getIDstringNameFromZYZX(prefix='+prefix+', zyzx['+zyzx+'])');
+	// console.log('In getIDstringNameFromZYZX(prefix='+prefix+', zyzx['+zyzx+'])');
 	
 	return (prefix + zyzx[0].toString() + zyzx[1].toString() + zyzx[2].toString() + zyzx[3].toString());
 }
 
 function getDDLbyZYZX(zyzx) {
 	
-	console.log('In getDDLbyZYZX(zyzx['+zyzx+'])');	
+	// console.log('In getDDLbyZYZX(zyzx['+zyzx+'])');	
 	
 	/* http://stackoverflow.com/questions/5501433/nodelist-object-in-javascript */
 	var ddlCellName = getIDstringNameFromZYZX("ddl", zyzx),
@@ -1285,7 +1411,7 @@ function getDDLbyZYZX(zyzx) {
 
 function getCellValueByZYZX(zyzx) {
 	
-	console.log('In getCellValueByZYZX(zyzx['+zyzx+'])');	
+	// console.log('In getCellValueByZYZX(zyzx['+zyzx+'])');	
 	
 	var respectiveDDL = getDDLbyZYZX(zyzx);
 		cellValue = respectiveDDL.value;
@@ -1469,6 +1595,59 @@ function getNext() {
 	}
 }
 
+function inputSampleValues() {
+	console.log('in inputSampleValues()');
+
+	var sampleValues = new Stack(), currentPair;
+
+	sampleValues.push([0,7]);
+	sampleValues.push([1,9]);
+	sampleValues.push([6,3]);
+	sampleValues.push([14,6]);
+	sampleValues.push([15,9]);
+	sampleValues.push([18,8]);
+	sampleValues.push([22,3]);
+	sampleValues.push([25,7]);
+	sampleValues.push([26,6]);
+
+	sampleValues.push([32,5]);
+	sampleValues.push([35,2]);
+	sampleValues.push([38,5]);
+	sampleValues.push([39,4]);
+	sampleValues.push([40,1]);
+	sampleValues.push([41,8]);
+	sampleValues.push([42,7]);
+	sampleValues.push([45,4]);
+	sampleValues.push([48,7]);
+
+	sampleValues.push([54,6]);
+	sampleValues.push([55,1]);
+	sampleValues.push([58,9]);
+	sampleValues.push([62,8]);
+	sampleValues.push([65,2]);
+	sampleValues.push([66,3]);
+	sampleValues.push([74,9]);
+	sampleValues.push([79,5]);
+	sampleValues.push([80,4]);
+
+	console.log('  sampleValues.length()=', sampleValues.length());
+
+	// currentPair = sampleValues.pop();
+	// console.log('currentPair=', currentPair);
+
+	// for(var i=0; i<sampleValues.length(); i++) { // wrong logic
+	while(sampleValues.length() > 0) {
+
+		currentPair = sampleValues.pop();
+
+		changeCellValue(currentPair[0], currentPair[1]);
+
+		updateCurrentValueInGrid81(currentPair[0], currentPair[1]);
+
+		doCellValueChanged(currentPair[0], 'i', currentPair[1]);
+	}
+}
+
 function initialise() {
 	
 	console.log('In initialise()');
@@ -1480,5 +1659,6 @@ function initialise() {
 	showArrayValues();
     showGrid81Values();
     
+    inputSampleValues();
 }
 
