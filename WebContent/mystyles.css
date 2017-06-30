@@ -34,6 +34,10 @@ td {
     background-color: purple;
 }
 
+._auto_ {
+    background-color: yellow;
+}
+
 .oneLeft, .oneTwoEight {
 	background-color: #808080; /* RGB:128,128,128 aka Gray */
 }

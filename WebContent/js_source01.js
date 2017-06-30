@@ -20,6 +20,10 @@ function Stack() {
 		return this.stac.length;
 	}
 	
+	this.splice = function(index, noOfItems) {
+		return this.stac.splice(index, noOfItems);
+	}
+
 	// https://appendto.com/2016/02/empty-array-javascript/?nabe=4834138299564032:0,5488687288942592:0,5685334715400192:1,6035677076783104:0,6118337346273280:1&utm_referrer=https%3A%2F%2Fwww.google.com.sg%2F
 	this.clear = function() {
 		for(var i=this.stac.length; i>0; i--) {
@@ -52,15 +56,35 @@ function copyGrid81toTempGrid81(fromGrid, toGrid) {
 	}
 }
 
-function findOption(level, theGrid, toSolveQueue) {
-	console.log('findOption(level=%s, theGrid.length=%s, toSolveQueue.length=%s)'
-		, level, theGrid.length, toSolveQueue.length());
+function findOption(level, theGrid, toSolveQueue, oneOptionTaken) {
+	var oneOptionTakenFound, temp_i;
 
 	for(var i=0; i<theGrid.length; i++) {
 		if((theGrid[i][5].length == level+1) && theGrid[i][2] == '_') {
 			toSolveQueue.push(i);
+
+			if((oneOptionTaken != null) 
+				&& (oneOptionTakenFound == null) 
+				&& (i == oneOptionTaken[1])) {
+				oneOptionTakenFound = toSolveQueue.length();
+			}
 		}
 	}
+
+	// taking the same cell as in oneOptionTaken, if found, and place it at the end
+	// for it to be the first one to pop later
+	if((oneOptionTaken != null) 
+		&& (oneOptionTakenFound != null) 
+		&& (toSolveQueue.length() > 0) 
+		&& (toSolveQueue.length() >= oneOptionTakenFound)) {
+		temp_i = toSolveQueue.splice(oneOptionTakenFound-1, 1);
+		toSolveQueue.push(temp_i[0]);
+	}
+
+	console.log('In findOption(level=%s, theGrid.length=%s, toSolveQueue, oneOptionTaken=%s) => %s'
+		, level, theGrid.length, ((oneOptionTaken!=null)?oneOptionTaken:'_'), (toSolveQueue.length() > 0));
+	console.log('  toSolveQueue.length()=%s, oneOptionTakenFound=%s'
+		, toSolveQueue.length(), ((oneOptionTakenFound!=null)?oneOptionTakenFound:'_'));
 
 	if(toSolveQueue.length() > 0) {
 		return true;
@@ -70,13 +94,14 @@ function findOption(level, theGrid, toSolveQueue) {
 }
 
 function getRandomNumber(inclusiveLowerBound, inclusiveUpperBound) {
+	var randomNumber = Math.floor((Math.random() * inclusiveUpperBound) + inclusiveLowerBound);
 	console.log('In getRandomNumber(inclusiveLowerBound='+inclusiveLowerBound
-		+', inclusiveUpperBound='+inclusiveUpperBound+')');
-	return Math.floor((Math.random() * inclusiveUpperBound) + inclusiveLowerBound);
+		+', inclusiveUpperBound='+inclusiveUpperBound
+		+') => randomNumber='+randomNumber);
+	return randomNumber;
 }
 
 function chooseOneFromOptions(options) {
-	console.log('In chooseOneFromOptions(options='+options+')');
 	var chosenOption = '_', randomNumber;
 
 	if(options.length > 2) {
@@ -84,24 +109,80 @@ function chooseOneFromOptions(options) {
 		chosenOption = options[randomNumber];
 	}
 
+	console.log('In chooseOneFromOptions(options='+options
+		+') => chosenOption='+chosenOption);
 	return chosenOption;
 }
 
-function getNewCellValue(theCell, oldCellValue) {
-	console.log('In getNewCellValue(theCell='+theCell
-		+', oldCellValue='+oldCellValue+')');
-	var newCellValue = '_';
+function chooseOneFromOptionsNotTried(options, triedOptions) {
+	var chosenOption = '_', randomNumber, foundSame = false;
+	var trimmedOptions = new Stack();
+
+	if(options.length > 2) {
+		for(var i=1; i<options.length; i++) {
+			for(var j=0; j<triedOptions.length; j++) {
+				if(options[i] == triedOptions[j]) {
+					foundSame = true;
+					break;
+				}
+			}
+
+			if(!foundSame) {
+				trimmedOptions.push(options[i]);
+			}
+		}
+	}
+
+	// if(options.length > 2) {
+	// 	randomNumber = getRandomNumber(1, options.length-1);
+	// 	chosenOption = options[randomNumber];
+	// }
+
+	if(trimmedOptions.length() <= 0) {
+		console.log('ERROR chooseOneFromOptionsNotTried > trimmedOptions.length()=', trimmedOptions.length());
+	} else if(trimmedOptions.length() == 1) {
+		chosenOption = trimmedOptions.pop();
+	} else {
+		randomNumber = getRandomNumber(0, trimmedOptions.length()-1);
+		chosenOption = trimmedOptions.splice(randomNumber,1);
+	}
+
+	console.log('In chooseOneFromOptionsNotTried(options='+options
+		+', triedOptions='+triedOptions
+		+') => chosenOption='+chosenOption);
+	return chosenOption;
+}
+
+function getNewCellValue(theCell, oldCellValue, oneOptionTaken) {
+	var newCellValue = '_', triedOptions = new Array();
+
 	if(window.grid81[theCell][5].length == 2) {
 		newCellValue = window.grid81[theCell][5][1];
 	} else if(window.grid81[theCell][5].length > 2) {
-		newCellValue = chooseOneFromOptions(window.grid81[theCell][5]);
+		if((oneOptionTaken != null) && (theCell == oneOptionTaken[1])) {
+			// do something
+			for(var i=0; i<oneOptionTaken[2].length; i++) {
+				triedOptions.push(oneOptionTaken[2][i]);
+			}
+
+			newCellValue = chooseOneFromOptionsNotTried(window.grid81[theCell][5], triedOptions);
+			triedOptions.push(newCellValue);
+			window.optionsTaken.push([window.prevStack.length(), theCell, triedOptions]);
+		} else {
+			newCellValue = chooseOneFromOptions(window.grid81[theCell][5]);
+			window.optionsTaken.push([window.prevStack.length(), theCell, [newCellValue]]);
+		}		
 	}
 
+	console.log('In getNewCellValue(theCell='+theCell
+		+', oldCellValue='+oldCellValue
+		+', oneOptionTaken='+((oneOptionTaken!=null)?oneOptionTaken:'_')
+		+') => grid81['+theCell+'][5]='+window.grid81[theCell][5]
+		+' newCellValue='+newCellValue);
 	return newCellValue;
 }
 
 function stillCellsWith_() {
-	console.log('In stillCellsWith_()');
 	var found_ = false; i=0;
 
 	while(!found_ && i<window.grid81.length) {
@@ -111,7 +192,16 @@ function stillCellsWith_() {
 		i++;
 	}
 
+	console.log('In stillCellsWith_() => ', found_);
 	return found_;
+}
+
+function doGoPrev(steps) {
+	console.log('In doGoPrev(steps='+steps+')');
+
+	for(var i=steps; i>0; i--) {
+		goPrev();
+	}
 }
 
 function solve() {
@@ -144,24 +234,38 @@ function solve() {
 function solve2() {
 	console.log('In solve2()');
 
-	var level=1, nextCell, newCellValue, oldCellValue, repeat=0,
-		tempGrid81 = new Array(81);
+	var level=1, nextCell, newCellValue, oldCellValue, repeat=0, oneOptionTaken,
+		tempGrid81 = new Array(81), doContinuePopUp = true;
+
+	window.optionsTaken = new Stack();
 
 	copyGrid81toTempGrid81(window.grid81, tempGrid81);
 	//console.log(tempGrid81[0]);
 	toSolveQueue = new Stack();
+
 	while((level <= 9) && stillCellsWith_()) {
 		repeat=0;
-		if(findOption(level, window.grid81, toSolveQueue) /*&& repeat<10*/) {
+		if(findOption(level, window.grid81, toSolveQueue, oneOptionTaken) /*&& repeat<10*/) {
 			level = 1; // reset options to find back to one
 			console.log('  repeat='+ repeat++ 
 				+' level='+level
 				+' toSolveQueue.length()='+toSolveQueue.length());
 
+			// think I should clear toSolveQueue and restart search back at level=1
+			// after just one randomly chosen cell in toSolveQueue
+			// as I could be decreasing options in other cells
+			// when I just change one of the cells in toSolveQueue
 			while(toSolveQueue.length() > 0) {
+				if(doContinuePopUp) {
+					doContinuePopUp = confirm('Continue while toSolveQueue.length()='
+						+toSolveQueue.length()+'?'
+						+'\n Click OK to continue one loop'
+						+'\n Click Cancel to disable this PopUp permanently');
+				}
+
 				nextCell = toSolveQueue.pop();
 				oldCellValue = getCurrentValueInGrid81(nextCell);
-				newCellValue = getNewCellValue(nextCell, oldCellValue);
+				newCellValue = getNewCellValue(nextCell, oldCellValue, oneOptionTaken);
 				if(newCellValue != '_') {
 					console.log('  changing value in cell '+nextCell
 						+' from '+oldCellValue+' to '+newCellValue);
@@ -174,7 +278,8 @@ function solve2() {
 					pushIntoPrevStack(new Array(nextCell, oldCellValue, newCellValue));
 					updateCurrentValueInGrid81(nextCell, newCellValue);
 			
-					doCellValueChanged(nextCell, oldCellValue, newCellValue);
+					// doCellValueChanged(nextCell, oldCellValue, newCellValue);
+					doCellValueChanged(nextCell, 'a', newCellValue);
 				} else {
 					console.log('  cannot get newCellValue in cell '+nextCell);
 				}
@@ -183,11 +288,34 @@ function solve2() {
 			// cannot find cell with only one option
 			// so increase options to find
 			level++;
+			console.log('  Increasing level to ', level);
+		}
+
+		// this shouldn't be in this while loop
+		if(window.optionsTaken.length() > 0) {
+			level = 1;
+			// do something
+			oneOptionTaken = window.optionsTaken.pop();
+			console.log('  oneOptionTaken=', oneOptionTaken);
+			doGoPrev((window.prevStack.length() - oneOptionTaken[0])+1);
+		} else {
+			console.log("  Cannot do any(more) stepbacks as "
+				+"optionsTaken.length()=", optionsTaken.length());
 		}
 	} // until cannot find cells with 9 number options OR no cells with '_'
 
+	// this was for debugging before any stepbacks
 	if(stillCellsWith_()) {
-		console.log('Cannot solve this (Yet?)');
+		if (confirm("  Cannot solve this. Reset grid to pre-solve layout?") == true) {
+			console.log('Cannot solve this. Resetting grid %s steps.'
+				, window.prevStack.length());
+			doGoPrev(window.prevStack.length());
+		} else {
+			console.log('  Cannot solve this. Not resetting grid.'
+				+' optionsTaken.length()=', window.optionsTaken.length());
+			// var oneOptionTaken = window.optionsTaken.pop();
+			// console.log('oneOptionTaken=', oneOptionTaken);
+		}
 	}
 }
 
@@ -904,7 +1032,7 @@ function updateDOMatTheseGridPos(gridPosArray) {
 	 * update the select options
 	 * at the gridPos in the DOM */
 	
-	console.log('In updateDOMatTheseGridPos(gridPosArray['+gridPosArray+'])');
+	// console.log('In updateDOMatTheseGridPos(gridPosArray['+gridPosArray+'])');
 	
 	var i,
 		gridPosArrayLength = gridPosArray.length,
@@ -1105,10 +1233,10 @@ function updateGreys() {
 }
 
 function updateStepCountArray(gridPos, oldCellValue, newCellValue) {
-	console.log('in updateStepCountArray(gridPos='+gridPos
-			+', oldCellValue='+oldCellValue
-			+', newCellValue='+newCellValue
-			+')');
+	// console.log('In updateStepCountArray(gridPos='+gridPos
+	// 		+', oldCellValue='+oldCellValue
+	// 		+', newCellValue='+newCellValue
+	// 		+')');
 	
 	if(window.stepCountArray[gridPos][1] != oldCellValue) {
 		console.log('ERROR: stepCountArray[gridPos][1]='+window.stepCountArray[gridPos][1]+' != oldCellValue');
@@ -1202,19 +1330,26 @@ function cellValueChanged(ddlName){
 }
 
 function doCellValueChanged(gridPos, oldCellValue, newCellValue) {
-	console.log('In doCellValueChanged(gridPos='+gridPos+', oldCellValue='+oldCellValue+', newCellValue='+newCellValue+')');
+	// console.log('In doCellValueChanged(gridPos='+gridPos+', oldCellValue='+oldCellValue+', newCellValue='+newCellValue+')');
 	
 	var zyzx = translate_gridPos_2_zyzx(gridPos);
 	
 	/* Just a proof of concept (POC) function. Comment out when true functions completed. */
-	if (newCellValue == '_') {
-		changeCellClass(zyzx, 'default'); 
-	} else {
-		changeCellClass(zyzx, '_error_');
-	}
+	// if (newCellValue == '_') {
+	// 	changeCellClass(zyzx, 'default'); 
+	// } else {
+	// 	changeCellClass(zyzx, '_error_');
+	// }
 	
-	if(oldCellValue == 'i') {
-		changeCellClass(zyzx, '_input_'); 
+	// if(oldCellValue == 'i') {
+	// 	changeCellClass(zyzx, '_input_'); 
+	// }
+
+	switch(oldCellValue) {
+		case 'i': changeCellClass(zyzx, '_input_'); break;
+		case 'a': changeCellClass(zyzx, '_auto_'); break;
+		case '_': changeCellClass(zyzx, 'default'); break;
+		default: changeCellClass(zyzx, '_error_'); break;
 	}
 
 	updateRelatedCellsValues(zyzx, newCellValue);
