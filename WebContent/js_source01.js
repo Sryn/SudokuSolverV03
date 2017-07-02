@@ -24,6 +24,10 @@ function Stack() {
 		return this.stac.splice(index, noOfItems);
 	}
 
+	this.item = function(index) {
+		return this.stac[index];
+	}
+
 	// https://appendto.com/2016/02/empty-array-javascript/?nabe=4834138299564032:0,5488687288942592:0,5685334715400192:1,6035677076783104:0,6118337346273280:1&utm_referrer=https%3A%2F%2Fwww.google.com.sg%2F
 	this.clear = function() {
 		for(var i=this.stac.length; i>0; i--) {
@@ -48,6 +52,27 @@ function initialiaseArray(theArray, initialValue) {
 	}	
 }
 
+function showGrid81OptionsQuantity() {
+	var i;
+
+	console.log('+-----+-----+-----+');
+	for(i=0; i<9; i++) {
+		console.log('|%s,%s,%s|%s,%s,%s|%s,%s,%s|'
+			, (window.grid81[i*9+0][2]=='_'?window.grid81[i*9+0][5].length-1:'*')
+			, (window.grid81[i*9+1][2]=='_'?window.grid81[i*9+1][5].length-1:'*')
+			, (window.grid81[i*9+2][2]=='_'?window.grid81[i*9+2][5].length-1:'*')
+			, (window.grid81[i*9+3][2]=='_'?window.grid81[i*9+3][5].length-1:'*')
+			, (window.grid81[i*9+4][2]=='_'?window.grid81[i*9+4][5].length-1:'*')
+			, (window.grid81[i*9+5][2]=='_'?window.grid81[i*9+5][5].length-1:'*')
+			, (window.grid81[i*9+6][2]=='_'?window.grid81[i*9+6][5].length-1:'*')
+			, (window.grid81[i*9+7][2]=='_'?window.grid81[i*9+7][5].length-1:'*')
+			, (window.grid81[i*9+8][2]=='_'?window.grid81[i*9+8][5].length-1:'*'))
+		if(i%3 == 2) {
+			console.log('+-----+-----+-----+');
+		}
+	}
+}
+
 function copyGrid81toTempGrid81(fromGrid, toGrid) {
 	if(fromGrid.length == toGrid.length) {
 		for(var i=0; i<fromGrid.length; i++) {
@@ -57,6 +82,8 @@ function copyGrid81toTempGrid81(fromGrid, toGrid) {
 }
 
 function findOption(level, theGrid, toSolveQueue, oneOptionTaken) {
+	console.log('In findOption(level=%s, theGrid.length=%s, toSolveQueue, oneOptionTaken=%s)'
+		, level, theGrid.length, ((oneOptionTaken!=null)?oneOptionTaken:'_'));
 	var oneOptionTakenFound, temp_i;
 
 	for(var i=0; i<theGrid.length; i++) {
@@ -71,8 +98,8 @@ function findOption(level, theGrid, toSolveQueue, oneOptionTaken) {
 		}
 	}
 
-	// taking the same cell as in oneOptionTaken, if found, and place it at the end
-	// for it to be the first one to pop later
+	// taking the same cell as in oneOptionTaken, if found, 
+	// and place it at the end for it to be the first one to pop later
 	if((oneOptionTaken != null) 
 		&& (oneOptionTakenFound != null) 
 		&& (toSolveQueue.length() > 0) 
@@ -81,10 +108,8 @@ function findOption(level, theGrid, toSolveQueue, oneOptionTaken) {
 		toSolveQueue.push(temp_i[0]);
 	}
 
-	console.log('In findOption(level=%s, theGrid.length=%s, toSolveQueue, oneOptionTaken=%s) => %s'
-		, level, theGrid.length, ((oneOptionTaken!=null)?oneOptionTaken:'_'), (toSolveQueue.length() > 0));
-	console.log('  toSolveQueue.length()=%s, oneOptionTakenFound=%s'
-		, toSolveQueue.length(), ((oneOptionTakenFound!=null)?oneOptionTakenFound:'_'));
+	console.log('  fO: => %s toSolveQueue.length()=%s, oneOptionTakenFound=%s'
+		, (toSolveQueue.length() > 0), toSolveQueue.length(), ((oneOptionTakenFound!=null)?oneOptionTakenFound:'_'));
 
 	if(toSolveQueue.length() > 0) {
 		return true;
@@ -115,15 +140,17 @@ function chooseOneFromOptions(options) {
 }
 
 function chooseOneFromOptionsNotTried(options, triedOptions) {
-	var chosenOption = '_', randomNumber, foundSame = false;
+	var chosenOption = '_', randomNumber, foundSame = false, i, j;
 	var trimmedOptions = new Stack();
 
 	if(options.length > 2) {
-		for(var i=1; i<options.length; i++) {
-			for(var j=0; j<triedOptions.length; j++) {
+		for(i=1; i<options.length; i++) {
+			for(j=0; j<triedOptions.length; j++) {
 				if(options[i] == triedOptions[j]) {
 					foundSame = true;
 					break;
+				} else {
+					foundSame = false;
 				}
 			}
 
@@ -200,8 +227,53 @@ function doGoPrev(steps) {
 	console.log('In doGoPrev(steps='+steps+')');
 
 	for(var i=steps; i>0; i--) {
+		showGrid81OptionsQuantity();
 		goPrev();
 	}
+}
+
+function getNextCell(toSolveQueue, oneOptionTaken, useOneOptionTaken) {
+	var i, randomNumber, nextCell, nextCellArrayOfOne, oneOptionTakenIndex
+		, startingUseOneOptionTakenValue = useOneOptionTaken;
+
+	if(toSolveQueue.length() > 1) {
+		if((oneOptionTaken != null) && useOneOptionTaken) {
+			for(i=0; i<toSolveQueue.length(); i++) {
+				console.log('  toSolveQueue.item(%i)=%s', i, toSolveQueue.item(i));
+				if(toSolveQueue.item(i) == oneOptionTaken[1]) {
+					oneOptionTakenIndex = i;
+					break;
+				}
+			}
+
+			nextCellArrayOfOne = toSolveQueue.splice(oneOptionTakenIndex, 1);	
+			nextCell = nextCellArrayOfOne[0];		
+			window.useOneOptionTaken = false;				
+		} else {
+			randomNumber = getRandomNumber(0, toSolveQueue.length()-1);	
+			nextCellArrayOfOne = toSolveQueue.splice(randomNumber, 1);	
+			nextCell = nextCellArrayOfOne[0];			
+		}
+	} else {
+		nextCell = toSolveQueue.pop();
+	}
+
+	console.log('In getNextCell(toSolveQueue.length()=%s'
+		+', oneOptionTaken[%s][%s][%s]'
+		+', useOneOptionTaken=%s)'
+		+' => nextCell=%s'
+		, toSolveQueue.length()+1
+		, ((oneOptionTaken!=null)?(oneOptionTaken[0]):'_')
+		, ((oneOptionTaken!=null)?(oneOptionTaken[1]):'_')
+		, ((oneOptionTaken!=null)?(oneOptionTaken[2]):'_')
+		, startingUseOneOptionTakenValue
+		, nextCell);
+	return nextCell;
+}
+
+function getOneValidOptionTaken(optionsTaken) {
+	console.log('In getOneValidOptionTaken(optionsTaken.length=%s)', optionsTaken.length());
+	return optionsTaken.pop();
 }
 
 function solve() {
@@ -234,75 +306,109 @@ function solve() {
 function solve2() {
 	console.log('In solve2()');
 
-	var level=1, nextCell, newCellValue, oldCellValue, repeat=0, oneOptionTaken,
-		tempGrid81 = new Array(81), doContinuePopUp = true;
+	var level=1, nextCell, newCellValue, oldCellValue, repeat=0
+		, oneOptionTaken, tempGrid81 = new Array(81)
+		, doContinuePopUp = true, newCellValueError = false
+		/*, levelMoreThanOne = false*/, doStepBacks = true;
 
 	window.optionsTaken = new Stack();
+	window.useOneOptionTaken = false;
 
 	copyGrid81toTempGrid81(window.grid81, tempGrid81);
 	//console.log(tempGrid81[0]);
 	toSolveQueue = new Stack();
 
-	while((level <= 9) && stillCellsWith_()) {
-		repeat=0;
-		if(findOption(level, window.grid81, toSolveQueue, oneOptionTaken) /*&& repeat<10*/) {
-			level = 1; // reset options to find back to one
-			console.log('  repeat='+ repeat++ 
-				+' level='+level
-				+' toSolveQueue.length()='+toSolveQueue.length());
+	while(doStepBacks) {
+		while((level <= 9) && stillCellsWith_() && !newCellValueError) {
+			repeat=0;
 
-			// think I should clear toSolveQueue and restart search back at level=1
-			// after just one randomly chosen cell in toSolveQueue
-			// as I could be decreasing options in other cells
-			// when I just change one of the cells in toSolveQueue
-			while(toSolveQueue.length() > 0) {
-				if(doContinuePopUp) {
-					doContinuePopUp = confirm('Continue while toSolveQueue.length()='
-						+toSolveQueue.length()+'?'
-						+'\n Click OK to continue one loop'
-						+'\n Click Cancel to disable this PopUp permanently');
+			// if(level>1) {
+				showGrid81OptionsQuantity();
+			// }
+
+			if(findOption(level, window.grid81, toSolveQueue, oneOptionTaken) 
+				/*&& repeat<10*/ 
+				/*&& !newCellValueError*/) {
+
+				level = 1; // reset options to find back to one
+
+				// think I should clear toSolveQueue and restart search back at level=1
+				// after just one randomly chosen cell in toSolveQueue
+				// as I could be decreasing options in other cells
+				// when I just change one of the cells in toSolveQueue
+				while((toSolveQueue.length() > 0) && !newCellValueError) {
+					console.log('  repeat='+ repeat++ 
+						+' level='+level
+						+' toSolveQueue.length()='+toSolveQueue.length());
+
+					if(doContinuePopUp && (oneOptionTaken != null)) {
+						doContinuePopUp = confirm('Continue while toSolveQueue.length()='
+							+toSolveQueue.length()+'?'
+							+'\n Click OK to continue one loop'
+							+'\n Click Cancel to disable this PopUp permanently');
+					}
+
+					// nextCell = toSolveQueue.pop();
+					nextCell = getNextCell(toSolveQueue, oneOptionTaken, useOneOptionTaken);
+					oldCellValue = getCurrentValueInGrid81(nextCell);
+					newCellValue = getNewCellValue(nextCell, oldCellValue, oneOptionTaken);
+					if(newCellValue != '_') {
+						console.log('  changing value in cell '+nextCell
+							+' from '+oldCellValue+' to '+newCellValue);
+
+						changeCellValue(nextCell, newCellValue);
+				
+						updateStepCount(1);
+						resetNextStepCount(newCellValue);
+						updateStepCountArray(nextCell, oldCellValue, newCellValue);
+						pushIntoPrevStack(new Array(nextCell, oldCellValue, newCellValue));
+						updateCurrentValueInGrid81(nextCell, newCellValue);
+				
+						// doCellValueChanged(nextCell, oldCellValue, newCellValue);
+						doCellValueChanged(nextCell, 'a', newCellValue);
+					} else {
+						console.log('  cannot get newCellValue in cell '+nextCell);
+						newCellValueError = true;
+						toSolveQueue.clear();
+					}
+
+					// if(levelMoreThanOne) {
+					// 	toSolveQueue.clear();
+					// 	levelMoreThanOne = false;
+					// }
 				}
-
-				nextCell = toSolveQueue.pop();
-				oldCellValue = getCurrentValueInGrid81(nextCell);
-				newCellValue = getNewCellValue(nextCell, oldCellValue, oneOptionTaken);
-				if(newCellValue != '_') {
-					console.log('  changing value in cell '+nextCell
-						+' from '+oldCellValue+' to '+newCellValue);
-
-					changeCellValue(nextCell, newCellValue);
-			
-					updateStepCount(1);
-					resetNextStepCount(newCellValue);
-					updateStepCountArray(nextCell, oldCellValue, newCellValue);
-					pushIntoPrevStack(new Array(nextCell, oldCellValue, newCellValue));
-					updateCurrentValueInGrid81(nextCell, newCellValue);
-			
-					// doCellValueChanged(nextCell, oldCellValue, newCellValue);
-					doCellValueChanged(nextCell, 'a', newCellValue);
-				} else {
-					console.log('  cannot get newCellValue in cell '+nextCell);
-				}
+			} else {
+				// cannot find cell with only one option
+				// so increase options to find
+				level++;
+				// levelMoreThanOne = true;
+				console.log('  Increasing level to ', level);
 			}
-		} else {
-			// cannot find cell with only one option
-			// so increase options to find
-			level++;
-			console.log('  Increasing level to ', level);
-		}
 
-		// this shouldn't be in this while loop
-		if(window.optionsTaken.length() > 0) {
-			level = 1;
-			// do something
-			oneOptionTaken = window.optionsTaken.pop();
-			console.log('  oneOptionTaken=', oneOptionTaken);
-			doGoPrev((window.prevStack.length() - oneOptionTaken[0])+1);
+		} // until cannot find cells with 9 number options OR no cells with '_'		
+
+		if(stillCellsWith_()) {
+			if(window.optionsTaken.length() > 0) {
+				level = 1;
+				// do something
+				// oneOptionTaken = window.optionsTaken.pop();
+				oneOptionTaken = getOneValidOptionTaken(optionsTaken);
+				console.log('  prevStack.length()=%s oneOptionTaken[%s][%s][%s]'
+					, window.prevStack.length(), oneOptionTaken[0]
+					, oneOptionTaken[1], oneOptionTaken[2]);
+				doGoPrev((window.prevStack.length() - oneOptionTaken[0]));
+				newCellValueError = false;
+				useOneOptionTaken = true;
+			} else {
+				console.log("  Cannot do any(more) stepbacks as "
+					+"optionsTaken.length()=", optionsTaken.length());
+				doStepBacks = false;
+			}			
 		} else {
-			console.log("  Cannot do any(more) stepbacks as "
-				+"optionsTaken.length()=", optionsTaken.length());
+			console.log('Exiting while(doStepBacks)');
+			doStepBacks = false;
 		}
-	} // until cannot find cells with 9 number options OR no cells with '_'
+	}	
 
 	// this was for debugging before any stepbacks
 	if(stillCellsWith_()) {
@@ -1795,5 +1901,7 @@ function initialise() {
     showGrid81Values();
     
     inputSampleValues();
+
+    showGrid81OptionsQuantity();
 }
 
