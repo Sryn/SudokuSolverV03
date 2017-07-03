@@ -52,6 +52,25 @@ function initialiaseArray(theArray, initialValue) {
 	}	
 }
 
+function existsGrid81EmptyCellsWithNoOptions(noOptionsEmptyCells) {
+	
+	while(noOptionsEmptyCells.length > 0) {
+		noOptionsEmptyCells.pop();
+	}
+	
+	for(var i=0; i<window.grid81.length; i++) {
+		if((window.grid81[i][2] == '_') && (window.grid81[i][5].length == 1)) {
+			noOptionsEmptyCells.push(i);
+		}
+	}
+	
+	if(noOptionsEmptyCells.length > 0) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
 function showGrid81OptionsQuantity() {
 	var i;
 
@@ -309,7 +328,8 @@ function solve2() {
 	var level=1, nextCell, newCellValue, oldCellValue, repeat=0
 		, oneOptionTaken, tempGrid81 = new Array(81)
 		, doContinuePopUp = true, newCellValueError = false
-		/*, levelMoreThanOne = false*/, doStepBacks = true;
+		, levelMoreThanOne = false, doStepBacks = true
+		, noOptionsEmptyCells = new Array();
 
 	window.optionsTaken = new Stack();
 	window.useOneOptionTaken = false;
@@ -372,16 +392,23 @@ function solve2() {
 						toSolveQueue.clear();
 					}
 
-					// if(levelMoreThanOne) {
-					// 	toSolveQueue.clear();
-					// 	levelMoreThanOne = false;
-					// }
+					 if(levelMoreThanOne) {
+					 	toSolveQueue.clear();
+					 	levelMoreThanOne = false;
+					 }
+					
+					if(existsGrid81EmptyCellsWithNoOptions(noOptionsEmptyCells)) {
+						console.log('  S2: noOptionsEmptyCells.length=', noOptionsEmptyCells.length);
+						showGrid81OptionsQuantity();
+					} else {
+						console.log('  S2: Empty Cells with no Options not found');
+					}
 				}
 			} else {
 				// cannot find cell with only one option
 				// so increase options to find
 				level++;
-				// levelMoreThanOne = true;
+				 levelMoreThanOne = true;
 				console.log('  Increasing level to ', level);
 			}
 
