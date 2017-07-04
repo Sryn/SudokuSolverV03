@@ -329,7 +329,8 @@ function solve2() {
 		, oneOptionTaken, tempGrid81 = new Array(81)
 		, doContinuePopUp = true, newCellValueError = false
 		, levelMoreThanOne = false, doStepBacks = true
-		, noOptionsEmptyCells = new Array();
+		, noOptionsEmptyCells = new Array()
+		, maxLoop = 100, loopCount = 0/*, breakExit = false*/;
 
 	window.optionsTaken = new Stack();
 	window.useOneOptionTaken = false;
@@ -361,6 +362,19 @@ function solve2() {
 						+' level='+level
 						+' toSolveQueue.length()='+toSolveQueue.length());
 
+					if(loopCount++ >= maxLoop) {
+						if(confirm('Exit while loopCount='
+								+loopCount+'?')) {
+							newCellValueError = true;
+							doStepBacks = false;
+							console.log('  s2: setting newCellValueError to ', newCellValueError);
+							break;
+						} else {
+							maxLoop = maxLoop * 2;
+							console.log('  s2: setting maxLoop to ', maxLoop);
+						}
+					}
+					
 					if(doContinuePopUp && (oneOptionTaken != null)) {
 						doContinuePopUp = confirm('Continue while toSolveQueue.length()='
 							+toSolveQueue.length()+'?'
