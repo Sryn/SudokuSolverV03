@@ -1,11 +1,16 @@
 /* mystyles.css */
 
-#stepTable {
+#stepTable, #buttonsTable {
 	border-color: transparent;
 }
 
 .noborders td {
     border-color: transparent;
+}
+    
+.developer {
+/* 	visibility: hidden; */
+	display:none;
 }
     
 table {

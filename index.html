@@ -19,19 +19,31 @@
     <td>&nbsp;<label id="nextStepCount">0</label>&nbsp;</td>
 </tr>
 </table>
-
-<input type="button" onclick="solve2()" value="Solve"/>
+<!-- <p> -->
+<!-- <input type="button" onclick="seedGrid81()" value="Seed Table"/> -->
+<!-- </p> -->
+<!-- <input type="button" onclick="doSolve2()" value="Solve"/> -->
+<!-- <br> -->
+<table id="buttonsTable">
+<tr class="noborders">
+    <td><input type="button" onClick="seedGrid81()" value="Seed Table" /></td>
+    <td><h3>&nbsp;|&nbsp;</h3></td>
+    <td><input type="button" onClick="resetGrid81()" value="Clear Table" /></td>
+    <td><h3>&nbsp;|&nbsp;</h3></td>
+    <td><input type="button" onclick="doSolve2()" value="Solve" /></td>
+</tr>
+</table>
 <br>
-<h2>stepCountArray</h2>
-<div id='stepCountArray'></div>
+<h2 id='h2stepCountArray' class="developer">stepCountArray</h2>
+<div id='stepCountArray' class="developer"></div>
 <br>
-<h2>Table Values</h2>
-<div id='values'></div>
+<h2 id='h2values' class="developer">Table Values</h2>
+<div id='values' class="developer"></div>
 <br>
-<h2>Array Values</h2>
-<div id='arrayValues'></div>
+<h2 id='h2arrayValues' class="developer">Array Values</h2>
+<div id='arrayValues' class="developer"></div>
 <br>
-<h2>grid81 Values</h2>
-<div id='grid81Values'></div>
+<h2 id='h2grid81Values' class="developer">grid81 Values</h2>
+<div id='grid81Values' class="developer"></div>
 </body>
 </html>

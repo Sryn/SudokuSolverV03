@@ -52,18 +52,24 @@ function initialiaseArray(theArray, initialValue) {
 	}	
 }
 
+// checks if exists any cell(s) in Grid81 that is both
+// no value selected and have no number options available to choose from
 function existsGrid81EmptyCellsWithNoOptions(noOptionsEmptyCells) {
 	
+	// empty the array first before use
 	while(noOptionsEmptyCells.length > 0) {
 		noOptionsEmptyCells.pop();
 	}
 	
+	// finds those cell(s) and pushes into array
 	for(var i=0; i<window.grid81.length; i++) {
 		if((window.grid81[i][2] == '_') && (window.grid81[i][5].length == 1)) {
 			noOptionsEmptyCells.push(i);
 		}
 	}
 	
+	// return true if exists, else false
+	// the array will be updated in origin if changed, as per JavaScript specs
 	if(noOptionsEmptyCells.length > 0) {
 		return true;
 	} else {
@@ -200,6 +206,11 @@ function chooseOneFromOptionsNotTried(options, triedOptions) {
 }
 
 function getNewCellValue(theCell, oldCellValue, oneOptionTaken) {
+	console.log('In getNewCellValue(theCell='+theCell
+			+', oldCellValue='+oldCellValue
+			+', oneOptionTaken='+((oneOptionTaken!=null)?oneOptionTaken:'_')
+			+')');
+	
 	var newCellValue = '_', triedOptions = new Array();
 
 	if(window.grid81[theCell][5].length == 2) {
@@ -211,19 +222,17 @@ function getNewCellValue(theCell, oldCellValue, oneOptionTaken) {
 				triedOptions.push(oneOptionTaken[2][i]);
 			}
 
-			newCellValue = chooseOneFromOptionsNotTried(window.grid81[theCell][5], triedOptions);
+//			newCellValue = chooseOneFromOptionsNotTried(window.grid81[theCell][5], triedOptions);
+			newCellValue = chooseOneFromOptionsNotTried(oneOptionTaken[3], triedOptions);
 			triedOptions.push(newCellValue);
-			window.optionsTaken.push([window.prevStack.length(), theCell, triedOptions]);
+			window.optionsTaken.push([window.prevStack.length(), theCell, triedOptions, window.grid81[theCell][5]]);
 		} else {
 			newCellValue = chooseOneFromOptions(window.grid81[theCell][5]);
-			window.optionsTaken.push([window.prevStack.length(), theCell, [newCellValue]]);
+			window.optionsTaken.push([window.prevStack.length(), theCell, [newCellValue], window.grid81[theCell][5]]);
 		}		
 	}
 
-	console.log('In getNewCellValue(theCell='+theCell
-		+', oldCellValue='+oldCellValue
-		+', oneOptionTaken='+((oneOptionTaken!=null)?oneOptionTaken:'_')
-		+') => grid81['+theCell+'][5]='+window.grid81[theCell][5]
+	console.log('  gNCV: => grid81['+theCell+'][5]='+window.grid81[theCell][5]
 		+' newCellValue='+newCellValue);
 	return newCellValue;
 }
@@ -246,19 +255,56 @@ function doGoPrev(steps) {
 	console.log('In doGoPrev(steps='+steps+')');
 
 	for(var i=steps; i>0; i--) {
-		showGrid81OptionsQuantity();
+//		showGrid81OptionsQuantity();
 		goPrev();
 	}
 }
 
+function checkIfValid(oneOptionTaken) {
+	console.log('In checkIfValid(oneOptionTaken[%s][%s][%s])'
+			, oneOptionTaken[0], oneOptionTaken[1], oneOptionTaken[2]);
+	
+	var newCellValue = '_', triedOptions = new Array();
+	
+	for(var i=0; i<oneOptionTaken[2].length; i++) {
+		triedOptions.push(oneOptionTaken[2][i]);
+	}
+	
+//	newCellValue = chooseOneFromOptionsNotTried(window.grid81[oneOptionTaken[1]][5], triedOptions);
+	newCellValue = chooseOneFromOptionsNotTried(oneOptionTaken[3], triedOptions);
+	
+	console.log('  cIV: return ', !(newCellValue == '_'));
+	
+	if(newCellValue == '_') {
+		return false;
+	} else {
+		return true;
+	}
+}
+
 function getNextCell(toSolveQueue, oneOptionTaken, useOneOptionTaken) {
-	var i, randomNumber, nextCell, nextCellArrayOfOne, oneOptionTakenIndex
-		, startingUseOneOptionTakenValue = useOneOptionTaken;
+	console.log('In getNextCell(toSolveQueue.length()=%s'
+			+', oneOptionTaken[%s][%s][%s]'
+			+', useOneOptionTaken=%s)'
+			, toSolveQueue.length()
+			, ((oneOptionTaken!=null)?(oneOptionTaken[0]):'_')
+			, ((oneOptionTaken!=null)?(oneOptionTaken[1]):'_')
+			, ((oneOptionTaken!=null)?(oneOptionTaken[2]):'_')
+			, useOneOptionTaken);
+	
+	var i, randomNumber, nextCell, nextCellArrayOfOne, oneOptionTakenIndex;
 
 	if(toSolveQueue.length() > 1) {
 		if((oneOptionTaken != null) && useOneOptionTaken) {
+			
+//			while(!checkIfValid(oneOptionTaken) && (window.optionsTaken.length() > 0)) {
+//				oneOptionTaken = window.optionsTaken.pop();
+//			}
+			
+			console.log('  gNC: oneOptionTaken[%s][%s][%s][%s]'
+					, oneOptionTaken[0], oneOptionTaken[1], oneOptionTaken[2], oneOptionTaken[3]);
 			for(i=0; i<toSolveQueue.length(); i++) {
-				console.log('  toSolveQueue.item(%i)=%s', i, toSolveQueue.item(i));
+				console.log('  gNC: toSolveQueue.item(%i)=%s', i, toSolveQueue.item(i));
 				if(toSolveQueue.item(i) == oneOptionTaken[1]) {
 					oneOptionTakenIndex = i;
 					break;
@@ -277,22 +323,33 @@ function getNextCell(toSolveQueue, oneOptionTaken, useOneOptionTaken) {
 		nextCell = toSolveQueue.pop();
 	}
 
-	console.log('In getNextCell(toSolveQueue.length()=%s'
-		+', oneOptionTaken[%s][%s][%s]'
-		+', useOneOptionTaken=%s)'
-		+' => nextCell=%s'
-		, toSolveQueue.length()+1
-		, ((oneOptionTaken!=null)?(oneOptionTaken[0]):'_')
-		, ((oneOptionTaken!=null)?(oneOptionTaken[1]):'_')
-		, ((oneOptionTaken!=null)?(oneOptionTaken[2]):'_')
-		, startingUseOneOptionTakenValue
+	console.log('  gNC: => nextCell=%s'
 		, nextCell);
 	return nextCell;
 }
 
 function getOneValidOptionTaken(optionsTaken) {
 	console.log('In getOneValidOptionTaken(optionsTaken.length=%s)', optionsTaken.length());
-	return optionsTaken.pop();
+	
+	var oneOptionTaken, oneValidOptionTakenFound = false
+		, alertMsg = 'gOVOT: Popping another oneOptionTaken';
+	
+	while(!oneValidOptionTakenFound && (optionsTaken.length() > 0)) {
+		oneOptionTaken = optionsTaken.pop();		
+		if(checkIfValid(oneOptionTaken)) {
+			oneValidOptionTakenFound = true;
+		} else {
+			console.log('  ' + alertMsg);
+			(window.doContinuePopUp)?alert(alertMsg):false;
+		}
+	}
+	
+//	var oneOptionTaken = optionsTaken.pop();
+	
+	console.log('  gOVOT: return oneOptionTaken[%s][%s][%s]'
+			, oneOptionTaken[0], oneOptionTaken[1], oneOptionTaken[2]);
+	
+	return oneOptionTaken;
 }
 
 function solve() {
@@ -327,7 +384,7 @@ function solve2() {
 
 	var level=1, nextCell, newCellValue, oldCellValue, repeat=0
 		, oneOptionTaken, tempGrid81 = new Array(81)
-		, doContinuePopUp = true, newCellValueError = false
+		, newCellValueError = false
 		, levelMoreThanOne = false, doStepBacks = true
 		, noOptionsEmptyCells = new Array()
 		, maxLoop = 100, loopCount = 0/*, breakExit = false*/;
@@ -362,9 +419,9 @@ function solve2() {
 						+' level='+level
 						+' toSolveQueue.length()='+toSolveQueue.length());
 
-					if(loopCount++ >= maxLoop) {
+					if(/*window.doContinuePopUp &&*/ (loopCount >= maxLoop)) {
 						if(confirm('Exit while loopCount='
-								+loopCount+'?')) {
+								+ loopCount + '?')) {
 							newCellValueError = true;
 							doStepBacks = false;
 							console.log('  s2: setting newCellValueError to ', newCellValueError);
@@ -374,8 +431,9 @@ function solve2() {
 							console.log('  s2: setting maxLoop to ', maxLoop);
 						}
 					}
+					loopCount++;
 					
-					if(doContinuePopUp && (oneOptionTaken != null)) {
+					if(window.doContinuePopUp && (oneOptionTaken != null)) {
 						doContinuePopUp = confirm('Continue while toSolveQueue.length()='
 							+toSolveQueue.length()+'?'
 							+'\n Click OK to continue one loop'
@@ -386,7 +444,7 @@ function solve2() {
 					nextCell = getNextCell(toSolveQueue, oneOptionTaken, useOneOptionTaken);
 					oldCellValue = getCurrentValueInGrid81(nextCell);
 					newCellValue = getNewCellValue(nextCell, oldCellValue, oneOptionTaken);
-					if(newCellValue != '_') {
+					if((newCellValue != '_') && !existsGrid81EmptyCellsWithNoOptions(noOptionsEmptyCells)) {
 						console.log('  changing value in cell '+nextCell
 							+' from '+oldCellValue+' to '+newCellValue);
 
@@ -411,12 +469,14 @@ function solve2() {
 					 	levelMoreThanOne = false;
 					 }
 					
-					if(existsGrid81EmptyCellsWithNoOptions(noOptionsEmptyCells)) {
-						console.log('  S2: noOptionsEmptyCells.length=', noOptionsEmptyCells.length);
-						showGrid81OptionsQuantity();
-					} else {
-						console.log('  S2: Empty Cells with no Options not found');
-					}
+//					if(existsGrid81EmptyCellsWithNoOptions(noOptionsEmptyCells)) {
+//						console.log('  S2: noOptionsEmptyCells.length=', noOptionsEmptyCells.length);
+//						showGrid81OptionsQuantity();
+//						newCellValueError = true;
+//						toSolveQueue.clear();
+//					} else {
+//						console.log('  S2: Empty Cells with no Options not found');
+//					}
 				}
 			} else {
 				// cannot find cell with only one option
@@ -446,7 +506,7 @@ function solve2() {
 				doStepBacks = false;
 			}			
 		} else {
-			console.log('Exiting while(doStepBacks)');
+			console.log('Exiting while(doStepBacks) with loopCount=', loopCount);
 			doStepBacks = false;
 		}
 	}	
@@ -463,6 +523,34 @@ function solve2() {
 			// var oneOptionTaken = window.optionsTaken.pop();
 			// console.log('oneOptionTaken=', oneOptionTaken);
 		}
+		
+		return false;
+	} else {
+		return true;
+	}
+	
+}
+
+function doSolve2() {
+	console.log('In doSolve2()');
+	
+	var repeatSolve2 = false, doAgain = true, loop = 1, maxLoop = 120;
+	
+	window.doContinuePopUp = false;
+
+	if(repeatSolve2) {
+		while(doAgain) {
+			doAgain = solve2();
+			
+			if(doAgain) {
+				doGoPrev(window.prevStack.length());		
+				doAgain = (maxLoop == 0) || (loop < maxLoop);				
+			}
+
+			console.log('  dS2: repeatSolve2=%s  loop=%s', repeatSolve2, loop++);			
+		}		
+	} else {
+		console.log('  dS2: solve2()=', solve2());
 	}
 }
 
@@ -1511,7 +1599,7 @@ function doCellValueChanged(gridPos, oldCellValue, newCellValue) {
 function changeCellValue(gridPos, newCellValue) {
 	console.log('In changeCellValue(gridPos='+gridPos+', newCellValue='+newCellValue+')');
 	
-	var zyzx = translate_gridPos_2_zyzx(gridPos);
+	var zyzx = translate_gridPos_2_zyzx(gridPos), rtnBool = false;
 	
 	// https://stackoverflow.com/a/10029429/5341492
 	var cell = getDDLbyZYZX(zyzx);
@@ -1519,9 +1607,12 @@ function changeCellValue(gridPos, newCellValue) {
 	for (var i=0; i<opts; i++){
 	    if (cell.options[i].value == newCellValue){
 	        cell.options[i].selected = true;
+	        rtnBool = true;
 	        break;
 	    }
 	}	
+	
+	return rtnBool;
 }
 
 function doPrevStep(gridPos, prevCellValue, currCellValue) {
@@ -1877,10 +1968,54 @@ function getNext() {
 	}
 }
 
-function inputSampleValues() {
-	console.log('in inputSampleValues()');
+function seed02() {
+	var seedArray = new Array();
 
-	var sampleValues = new Stack(), currentPair;
+	// Template
+//	seedArray = 
+//		[0,0,0, 0,0,0, 0,0,0
+//		,0,0,0, 0,0,0, 0,0,0
+//		,0,0,0, 0,0,0, 0,0,0
+//		
+//		,0,0,0, 0,0,0, 0,0,0
+//		,0,0,0, 0,0,0, 0,0,0
+//		,0,0,0, 0,0,0, 0,0,0
+//		
+//		,0,0,0, 0,0,0, 0,0,0
+//		,0,0,0, 0,0,0, 0,0,0
+//		,0,0,0, 0,0,0, 0,0,0];
+	
+	seedArray.push( 
+		[7,9,0, 0,0,0, 3,0,0
+		,0,0,0, 0,0,6, 9,0,0
+		,8,0,0, 0,3,0, 0,7,6
+		
+		,0,0,0, 0,0,5, 0,0,2
+		,0,0,5, 4,1,8, 7,0,0
+		,4,0,0, 7,0,0, 0,0,0
+		
+		,6,1,0, 0,9,0, 0,0,8
+		,0,0,2, 3,0,0, 0,0,0
+		,0,0,9, 0,0,0, 0,5,4]);
+
+	seedArray.push(
+		[0,0,0, 0,0,6, 0,7,0
+		,0,7,0, 9,0,4, 0,3,0
+		,4,0,0, 0,0,0, 0,0,1
+		
+		,3,0,6, 0,0,0, 0,0,0
+		,0,0,2, 8,0,1, 9,0,0
+		,0,0,0, 0,0,0, 1,0,5
+		
+		,1,0,0, 0,0,0, 0,0,7
+		,0,3,0, 5,0,8, 0,9,0
+		,0,5,0, 4,0,0, 0,0,0]);
+	
+	return seedArray[getRandomNumber(1, seedArray.length) - 1];
+}
+
+function seed01() {
+	var sampleValues = new Stack();
 
 	sampleValues.push([0,7]);
 	sampleValues.push([1,9]);
@@ -1912,6 +2047,37 @@ function inputSampleValues() {
 	sampleValues.push([79,5]);
 	sampleValues.push([80,4]);
 
+	return sampleValues;
+}
+
+function inputSampleValues2() {
+	console.log('In inputSampleValues()');
+
+	var sampleValues = seed02(), seed;
+
+	// currentPair = sampleValues.pop();
+	// console.log('currentPair=', currentPair);
+
+	// for(var i=0; i<sampleValues.length(); i++) { // wrong logic
+	while(sampleValues.length > 0) {
+
+		seed = sampleValues.pop();
+		cell = sampleValues.length;
+
+		if(seed != 0) {
+			if(changeCellValue(cell, seed)) {
+				updateCurrentValueInGrid81(cell, seed);
+				doCellValueChanged(cell, 'i', seed);							
+			}
+		}
+	}
+}
+
+function inputSampleValues() {
+	console.log('In inputSampleValues()');
+
+	var sampleValues = seed01(), currentPair;
+
 	console.log('  sampleValues.length()=', sampleValues.length());
 
 	// currentPair = sampleValues.pop();
@@ -1930,8 +2096,28 @@ function inputSampleValues() {
 	}
 }
 
-function initialise() {
+function resetGrid81() {
+	console.log('In resetGrid81()');
 	
+	for(var i=0; i<window.grid81.length; i++) {
+		if(window.grid81[2] != '_') {
+			changeCellValue(i, '_');
+			updateCurrentValueInGrid81(i, '_');
+			doCellValueChanged(i, '_', '_');
+		}
+	}
+}
+
+function seedGrid81() {
+	console.log('In seedGrid81()');
+	
+//    inputSampleValues();
+	resetGrid81();
+    inputSampleValues2();
+    showGrid81OptionsQuantity();
+}
+
+function initialise() {	
 	console.log('In initialise()');
 	
 	createStepCountArray();
@@ -1939,10 +2125,6 @@ function initialise() {
 	createTable();
 	showStepCountArray();
 	showArrayValues();
-    showGrid81Values();
-    
-    inputSampleValues();
-
-    showGrid81OptionsQuantity();
+    showGrid81Values();    
 }
 
