@@ -5,10 +5,63 @@ Page at https://sryn.github.io/SudokuSolverV03/
 
 Commit History Comments:
 
+* July 6, 2017
+-- Algorithm Working!
+-- After multiple setbacks, I've got it working
+-- Some rearranging & cleaning up of code
+-- Some change of what to show in console.log
+-- Introduced infinity or non-infinity solve loops
+-- Change whether to show or not some popups
+-- Rearranged some HTML
+-- Hide the developer arrays
+-- SeedTable and ResetTable buttons
+
+* July 4, 2017
+-- Implemented a runaway loop check and exit
+-- Still debugging
+
+* July 3, 2017
+-- Show empty cells with no options
+-- find, count and store respective index in array the empty cells with
+no options
+
+* July 3, 2017
+-- It can solve for some random paths, but ...
+-- need to look into the algorithm
+-- might start over the algorithm
+
+* June 30, 2017
+-- Unfinished & broken stepBack algorithm
+-- have to think about restarting search at level=1 after doing just one
+cell in toSolveQueue
+-- have to think about where to properly put the
+‘if(window.optionsTaken.length() > 0)’ check. This should only happen
+when we’re stuck at stillCellsWith_=true and those cell don’t have any
+number options
+
+* June 29, 2017
+-- Almost to a solve2 solution
+-- Implemented various functions to have automatic filling of cells with
+one option or choose among options. This can lead down to an unsolvable
+grid with cells with no valid options.
+-- Need to implement a backtrack algorithm that retraces the chosen
+steps and chooses another of the valid options in a cell with more than
+one valid options. Must be able to retrace even deeper if a cell’s
+valid options have all been tried.
+
+* June 28, 2017
+-- nextStepCount
+-- move stepCount as prevStepCount
+-- implement and show nextStepCount
+-- if nextStep value is not zero, reset nextStack/nextStep to 0 if user
+inputs a different value to the nextStep value.
+
 * June 8, 2017
+-- Finished Prev and Next Implementation
 -- Prev and Next buttons work now
 
 * June 7, 2017
+-- prev & next
 -- Implemented arrays and stacks to track changes
 -- prev and next buttons not implemented yet
 
