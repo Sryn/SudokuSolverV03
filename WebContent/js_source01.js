@@ -1521,6 +1521,11 @@ function resetNextStepCount(newCellValue) {
 	}
 }
 
+function resetPrevStepCount() {
+	window.prevStack.clear();
+	updateStepCount(0);
+}
+
 function cellValueChanged(ddlName){
 //	alert("caller is " + ddlName + ", " + arguments.callee.caller.toString());
 	var zyzx = getZYZXfromDdlName(ddlName),
@@ -2106,6 +2111,8 @@ function resetGrid81() {
 			doCellValueChanged(i, '_', '_');
 		}
 	}
+
+	resetPrevStepCount();
 }
 
 function seedGrid81() {
