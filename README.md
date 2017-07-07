@@ -6,9 +6,14 @@ Page at https://sryn.github.io/SudokuSolverV03/
 Commit History Comments:
 
 * July 7, 2017
+	- Rearranged files
+	- Made the Assets folder
+
+
+* July 7, 2017
 	- Cleared prevSteps upon resetGrid81
 	- overlooked this step
-	
+
 
 * July 7, 2017
 	- README.md updated
