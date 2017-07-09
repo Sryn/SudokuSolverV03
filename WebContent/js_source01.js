@@ -28,6 +28,14 @@ function Stack() {
 		return this.stac[index];
 	}
 
+	this.includes = function(item) {
+		if(this.stac.includes(item)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 	// https://appendto.com/2016/02/empty-array-javascript/?nabe=4834138299564032:0,5488687288942592:0,5685334715400192:1,6035677076783104:0,6118337346273280:1&utm_referrer=https%3A%2F%2Fwww.google.com.sg%2F
 	this.clear = function() {
 		for(var i=this.stac.length; i>0; i--) {
@@ -106,9 +114,9 @@ function copyGrid81toTempGrid81(fromGrid, toGrid) {
 	}
 }
 
-function findOption(level, theGrid, toSolveQueue, oneOptionTaken) {
-	console.log('In findOption(level=%s, theGrid.length=%s, toSolveQueue, oneOptionTaken=%s)'
-		, level, theGrid.length, ((oneOptionTaken!=null)?oneOptionTaken:'_'));
+function findOption(level, theGrid, toSolveQueue, oneOptionTaken, branchItem) {
+	console.log('In findOption(level=%s, theGrid.length=%s, toSolveQueue, oneOptionTaken=%s, branchItem=%s)'
+		, level, theGrid.length, ((oneOptionTaken!=null)?oneOptionTaken:'_'), branchItem);
 	var oneOptionTakenFound, temp_i;
 
 	for(var i=0; i<theGrid.length; i++) {
@@ -136,11 +144,68 @@ function findOption(level, theGrid, toSolveQueue, oneOptionTaken) {
 	console.log('  fO: => %s toSolveQueue.length()=%s, oneOptionTakenFound=%s'
 		, (toSolveQueue.length() > 0), toSolveQueue.length(), ((oneOptionTakenFound!=null)?oneOptionTakenFound:'_'));
 
+	// we only need to record when the algorithm chooses between more than one option
+	if((level > 1) && ((toSolveQueue.length() > 0))) {
+		branchItem.push(window.prevStack.length()); // branchItem[0] = window.prevStack.length()
+		branchItem.push(toSolveQueue) // branchItem[1] = toSolveQueue
+	}
+
 	if(toSolveQueue.length() > 0) {
 		return true;
 	} else {
 		return false;
 	}
+}
+
+function checkOneOptionTakenIsValidAgainstBranchStack(oneOptionTaken, branchStack) {
+	console.log('In checkOneOptionTakenIsValidAgainstBranchStack(oneOptionTaken=%s, branchStack.length=%s)'
+		, ((oneOptionTaken != null)? oneOptionTaken: '_')
+		, branchStack.length);
+
+	var rtnBool = true;
+
+	/*
+	oneOptionTaken = [window.prevStack.length(), theCell, triedOptions, window.grid81[theCell][5]]
+	branchStack[index] = [prevStack.length, toSolveQueue, [tried Cells]]
+
+	check oneOptionTaken is not null
+		check oneOptionTaken prevStack.length is the same as the last item[0] in branchStack
+			if oneOptionTaken is valid
+				do something?
+			else if oneOptionTaken is not valid
+				return false
+	 */
+
+	if((oneOptionTaken != null) && (branchStack.length > 0)) {
+		while(branchStack[branchStack.length-1][0] > window.prevStack.length()) {
+			console.log('  cOOTISABS: branchStack[%s][0]=%s, window.prevStack.length()=%s'
+				, branchStack.length-1, branchStack[branchStack.length-1][0], window.prevStack.length());
+			branchStack.pop();
+		} 
+
+	    var lastIndex = branchStack.length - 1;
+
+		if(oneOptionTaken[0] == branchStack[lastIndex][0]) {
+			if(checkIfCellInBranchStackItem(oneOptionTaken[1], branchStack[lastIndex][2])) {
+				if(!checkIfValid(oneOptionTaken)) {
+					rtnBool = false;
+				} else {
+					console.log('  cOOTISABS: !checkIfValid(oneOptionTaken=%s) => false', oneOptionTaken);
+				}
+			} else {
+				console.log('  cOOTISABS: checkIfCellInBranchStackItem(oneOptionTaken[1]=%s'
+					+', branchStack[%s][2]=%s) => false'
+					, oneOptionTaken[1], lastIndex, branchStack[lastIndex][2], branchStack[lastIndex][0]);
+			}
+		} else {
+			console.log('  cOOTISABS: oneOptionTaken[0]=%s != branchStack[%s][0]=%s'
+				, oneOptionTaken[0], lastIndex, branchStack[lastIndex][0]);
+		}
+		
+	}	
+
+	console.log('  cOOTISABS: rtnBool=', rtnBool);
+	return rtnBool;
 }
 
 function getRandomNumber(inclusiveLowerBound, inclusiveUpperBound) {
@@ -205,10 +270,11 @@ function chooseOneFromOptionsNotTried(options, triedOptions) {
 	return chosenOption;
 }
 
-function getNewCellValue(theCell, oldCellValue, oneOptionTaken) {
+function getNewCellValue(theCell, oldCellValue, oneOptionTaken, branchItem) {
 	console.log('In getNewCellValue(theCell='+theCell
 			+', oldCellValue='+oldCellValue
 			+', oneOptionTaken='+((oneOptionTaken!=null)?oneOptionTaken:'_')
+			+', branchItem=', ((branchItem != null)?branchItem:'_')
 			+')');
 	
 	var newCellValue = '_', triedOptions = new Array();
@@ -230,6 +296,11 @@ function getNewCellValue(theCell, oldCellValue, oneOptionTaken) {
 			newCellValue = chooseOneFromOptions(window.grid81[theCell][5]);
 			window.optionsTaken.push([window.prevStack.length(), theCell, [newCellValue], window.grid81[theCell][5]]);
 		}		
+	}
+
+	// don't think this is useful
+	if(branchItem != null) {
+		branchItem.push(window.grid81[theCell][5].length); // branchItem[3] = newCellValue
 	}
 
 	console.log('  gNCV: => grid81['+theCell+'][5]='+window.grid81[theCell][5]
@@ -282,15 +353,18 @@ function checkIfValid(oneOptionTaken) {
 	}
 }
 
-function getNextCell(toSolveQueue, oneOptionTaken, useOneOptionTaken) {
+function getNextCell(toSolveQueue, oneOptionTaken, useOneOptionTaken, branchItem) {
 	console.log('In getNextCell(toSolveQueue.length()=%s'
-			+', oneOptionTaken[%s][%s][%s]'
-			+', useOneOptionTaken=%s)'
+			+', oneOptionTaken[%s][%s][%s][%s]'
+			+', useOneOptionTaken=%s'
+			+', branchItem=%s)'
 			, toSolveQueue.length()
 			, ((oneOptionTaken!=null)?(oneOptionTaken[0]):'_')
 			, ((oneOptionTaken!=null)?(oneOptionTaken[1]):'_')
 			, ((oneOptionTaken!=null)?(oneOptionTaken[2]):'_')
-			, useOneOptionTaken);
+			, ((oneOptionTaken!=null)?(oneOptionTaken[3]):'_')
+			, useOneOptionTaken
+			, branchItem);
 	
 	var i, randomNumber, nextCell, nextCellArrayOfOne, oneOptionTakenIndex;
 
@@ -323,6 +397,10 @@ function getNextCell(toSolveQueue, oneOptionTaken, useOneOptionTaken) {
 		nextCell = toSolveQueue.pop();
 	}
 
+	if(branchItem != null) {
+		branchItem.push([nextCell]); // branchItem[2] = nextCell
+	}
+
 	console.log('  gNC: => nextCell=%s'
 		, nextCell);
 	return nextCell;
@@ -331,25 +409,135 @@ function getNextCell(toSolveQueue, oneOptionTaken, useOneOptionTaken) {
 function getOneValidOptionTaken(optionsTaken) {
 	console.log('In getOneValidOptionTaken(optionsTaken.length=%s)', optionsTaken.length());
 	
-	var oneOptionTaken, oneValidOptionTakenFound = false
+	var oneOptionTaken
+		// , oneValidOptionTakenFound = false
 		, alertMsg = 'gOVOT: Popping another oneOptionTaken';
 	
-	while(!oneValidOptionTakenFound && (optionsTaken.length() > 0)) {
-		oneOptionTaken = optionsTaken.pop();		
-		if(checkIfValid(oneOptionTaken)) {
-			oneValidOptionTakenFound = true;
-		} else {
-			console.log('  ' + alertMsg);
-			(window.doContinuePopUp)?alert(alertMsg):false;
-		}
+	// while(!oneValidOptionTakenFound && (optionsTaken.length() > 0)) {
+	// 	oneOptionTaken = optionsTaken.pop();		
+	// 	if(checkIfValid(oneOptionTaken)) {
+	// 		oneValidOptionTakenFound = true;
+	// 	} else {
+	// 		console.log('  ' + alertMsg);
+	// 		(window.doContinuePopUp)?alert(alertMsg):false;
+	// 	}
+	// }
+
+	if(optionsTaken.length() > 0) {
+		oneOptionTaken = optionsTaken.pop();
 	}
-	
-//	var oneOptionTaken = optionsTaken.pop();
-	
+
 	console.log('  gOVOT: return oneOptionTaken[%s][%s][%s]'
 			, oneOptionTaken[0], oneOptionTaken[1], oneOptionTaken[2]);
 	
 	return oneOptionTaken;
+}
+
+// this is working on the toSolveQueue stacs
+function checkIfSameArrays(arrayA, arrayB) {
+	console.log('In checkIfSameArrays(arrayA.length=%s, arrayB.length=%s)'
+		, arrayA.length(), arrayB.length());
+
+	var rtnBool = true, i=0, element;
+
+	if(arrayA.length() != arrayB.length()) {
+		rtnBool = false;
+	} else {
+		// check contents
+		while(i < arrayA.length()) {
+			element = arrayA[i]
+
+			if(!arrayB.includes(element)) {
+				rtnBool = false;
+				break;
+			};
+
+			i++;
+		}
+	}
+
+	console.log('  cISA: rtnBool=', rtnBool);
+	return rtnBool;
+}
+
+function checkIfCellInBranchStackItem(cell, anArray) {
+	console.log('In checkIfCellInBranchStackItem(cell=%s, anArray=%s)');
+
+	var rtnBool = false;
+
+	if((cell != null) && (anArray.length > 0)) {
+		if(anArray.includes(cell)) {
+			rtnBool = true;
+		}
+	}
+
+	console.log('  cICIBSI: rtnBool=', rtnBool);
+	return rtnBool;
+}
+
+function findBranchItemInBranchStack(branchItem, branchStack) {
+	console.log('In findBranchItemInBranchStack(branchItem=%s, branchStack.length=%s)'
+		, branchItem, branchStack.length);
+
+	var i=0, index;
+
+	if(branchItem.length>0 && branchStack.length>0) {
+		while(i<branchStack.length) {
+			if(branchStack[i][0] == branchItem[0]) { // prevStack.length
+				if(checkIfSameArrays(branchStack[i][1], branchItem[1])) { // toSolveQueue
+					index = i;
+					break;
+				}
+			} 
+			i++;
+		}
+	}
+
+	console.log('  fBIIBS: index=', ((index!=null)?index:'_'));
+	return index;
+}
+
+function addBranchItemCellInBranchStack(branchItem, index, branchStack) {
+	console.log('In addBranchItemCellInBranchStack(branchItem=%s, index=%s, branchStack[%s][2].length=%s)'
+		, branchItem, index, index, branchStack[index][2].length);
+
+	if((branchItem[2][0].length == 1) 
+		&& !checkIfCellInBranchStackItem(branchItem[2][0], branchStack[index][2])) {
+		branchStack[index][2].push(branchItem[2][0]);
+	}
+
+	console.log('  aBICIBS: branchStack[%s][2].length=%s', index, branchStack[index][2].length);
+}
+
+function pushValidBranchItemIntoBranchStack(branchItem, branchStack) {
+	console.log('In pushValidBranchItemIntoBranchStack(branchItem=%s, branchStack.length=%s)'
+		, branchItem, branchStack.length);
+
+	var branchStackIndex = 0;
+
+	if((branchItem.length > 0) && (branchItem[3] > 2)) {
+		if(branchStack.length == 0) {
+			branchItem.pop(); // don't need to save branchItem[3]=window.grid81[theCell][5].length
+			branchStack.push(branchItem);
+		} else {
+			/*  find branchStack item the same as branchItem
+				if found
+					add newCell=branchItem[3] as tried cell in the found item in branchStack
+				if not found
+					push branchItem as new branchStack item
+			*/
+
+			branchStackIndex = findBranchItemInBranchStack(branchItem, branchStack);
+
+			if(branchStackIndex != null) {
+				addBranchItemCellInBranchStack(branchItem, branchStackIndex, branchStack);
+			} else {
+				branchStack.push(branchItem);
+			}
+		}
+	}
+
+	console.log('  pVBITBS: branchStack.length=', branchStack.length);
 }
 
 function solve() {
@@ -387,9 +575,11 @@ function solve2() {
 		, newCellValueError = false
 		, levelMoreThanOne = false, doStepBacks = true
 		, noOptionsEmptyCells = new Array()
-		, maxLoop = 100, loopCount = 0/*, breakExit = false*/;
+		, maxLoop = 100, loopCount = 0/*, breakExit = false*/
+		, branchItem = new Array()
+		, branchStack = new Array();
 
-	window.optionsTaken = new Stack();
+	window.optionsTaken = new Stack();	
 	window.useOneOptionTaken = false;
 
 	copyGrid81toTempGrid81(window.grid81, tempGrid81);
@@ -397,6 +587,7 @@ function solve2() {
 	toSolveQueue = new Stack();
 
 	while(doStepBacks) {
+		
 		while((level <= 9) && stillCellsWith_() && !newCellValueError) {
 			repeat=0;
 
@@ -404,87 +595,99 @@ function solve2() {
 				showGrid81OptionsQuantity();
 			// }
 
-			if(findOption(level, window.grid81, toSolveQueue, oneOptionTaken) 
-				/*&& repeat<10*/ 
-				/*&& !newCellValueError*/) {
+			if(checkOneOptionTakenIsValidAgainstBranchStack(oneOptionTaken, branchStack)) {
 
-				level = 1; // reset options to find back to one
+				if(findOption(level, window.grid81, toSolveQueue, oneOptionTaken, branchItem) 
+					/*&& repeat<10*/ 
+					/*&& !newCellValueError*/) {
 
-				// think I should clear toSolveQueue and restart search back at level=1
-				// after just one randomly chosen cell in toSolveQueue
-				// as I could be decreasing options in other cells
-				// when I just change one of the cells in toSolveQueue
-				while((toSolveQueue.length() > 0) && !newCellValueError) {
-					console.log('  repeat='+ repeat++ 
-						+' level='+level
-						+' toSolveQueue.length()='+toSolveQueue.length());
+					level = 1; // reset options to find back to one
 
-					if(/*window.doContinuePopUp &&*/ (loopCount >= maxLoop)) {
-						if(confirm('Exit while loopCount='
-								+ loopCount + '?')) {
-							newCellValueError = true;
-							doStepBacks = false;
-							console.log('  s2: setting newCellValueError to ', newCellValueError);
-							break;
-						} else {
-							maxLoop = maxLoop * 2;
-							console.log('  s2: setting maxLoop to ', maxLoop);
+					// think I should clear toSolveQueue and restart search back at level=1
+					// after just one randomly chosen cell in toSolveQueue
+					// as I could be decreasing options in other cells
+					// when I just change one of the cells in toSolveQueue
+					while((toSolveQueue.length() > 0) && !newCellValueError) {
+						console.log('  s2: repeat='+ repeat++ 
+							+' level='+level
+							+' toSolveQueue.length()='+toSolveQueue.length());
+
+						if(/*window.doContinuePopUp &&*/ (loopCount >= maxLoop)) {
+							if(confirm('Exit while loopCount='
+									+ loopCount + '?')) {
+								newCellValueError = true;
+								doStepBacks = false;
+								console.log('  s2: setting newCellValueError to ', newCellValueError);
+								break;
+							} else {
+								maxLoop = maxLoop * 2;
+								console.log('  s2: setting maxLoop to ', maxLoop);
+							}
 						}
-					}
-					loopCount++;
+						loopCount++;
+						
+						if(window.doContinuePopUp && (oneOptionTaken != null)) {
+							doContinuePopUp = confirm('Continue while toSolveQueue.length()='
+								+toSolveQueue.length()+'?'
+								+'\n Click OK to continue one loop'
+								+'\n Click Cancel to disable this PopUp permanently');
+						}
+
+						// nextCell = toSolveQueue.pop();
+						nextCell = getNextCell(toSolveQueue, oneOptionTaken, useOneOptionTaken, branchItem);
+						oldCellValue = getCurrentValueInGrid81(nextCell);
+						newCellValue = getNewCellValue(nextCell, oldCellValue, oneOptionTaken, branchItem);
+
+						if((newCellValue != '_') && !existsGrid81EmptyCellsWithNoOptions(noOptionsEmptyCells)) {
+							console.log('  changing value in cell '+nextCell
+								+' from '+oldCellValue+' to '+newCellValue);
+
+							pushValidBranchItemIntoBranchStack(branchItem, branchStack);
+
+							changeCellValue(nextCell, newCellValue);
 					
-					if(window.doContinuePopUp && (oneOptionTaken != null)) {
-						doContinuePopUp = confirm('Continue while toSolveQueue.length()='
-							+toSolveQueue.length()+'?'
-							+'\n Click OK to continue one loop'
-							+'\n Click Cancel to disable this PopUp permanently');
-					}
-
-					// nextCell = toSolveQueue.pop();
-					nextCell = getNextCell(toSolveQueue, oneOptionTaken, useOneOptionTaken);
-					oldCellValue = getCurrentValueInGrid81(nextCell);
-					newCellValue = getNewCellValue(nextCell, oldCellValue, oneOptionTaken);
-					if((newCellValue != '_') && !existsGrid81EmptyCellsWithNoOptions(noOptionsEmptyCells)) {
-						console.log('  changing value in cell '+nextCell
-							+' from '+oldCellValue+' to '+newCellValue);
-
-						changeCellValue(nextCell, newCellValue);
-				
-						updateStepCount(1);
-						resetNextStepCount(newCellValue);
-						updateStepCountArray(nextCell, oldCellValue, newCellValue);
-						pushIntoPrevStack(new Array(nextCell, oldCellValue, newCellValue));
-						updateCurrentValueInGrid81(nextCell, newCellValue);
-				
-						// doCellValueChanged(nextCell, oldCellValue, newCellValue);
-						doCellValueChanged(nextCell, 'a', newCellValue);
-					} else {
-						console.log('  cannot get newCellValue in cell '+nextCell);
-						newCellValueError = true;
-						toSolveQueue.clear();
-					}
-
-					 if(levelMoreThanOne) {
-					 	toSolveQueue.clear();
-					 	levelMoreThanOne = false;
-					 }
+							updateStepCount(1);
+							resetNextStepCount(newCellValue);
+							updateStepCountArray(nextCell, oldCellValue, newCellValue);
+							pushIntoPrevStack(new Array(nextCell, oldCellValue, newCellValue));
+							updateCurrentValueInGrid81(nextCell, newCellValue);
 					
-//					if(existsGrid81EmptyCellsWithNoOptions(noOptionsEmptyCells)) {
-//						console.log('  S2: noOptionsEmptyCells.length=', noOptionsEmptyCells.length);
-//						showGrid81OptionsQuantity();
-//						newCellValueError = true;
-//						toSolveQueue.clear();
-//					} else {
-//						console.log('  S2: Empty Cells with no Options not found');
-//					}
+							// doCellValueChanged(nextCell, oldCellValue, newCellValue);
+							doCellValueChanged(nextCell, 'a', newCellValue);
+						} else {
+							console.log('  cannot get newCellValue in cell '+nextCell);
+							newCellValueError = true;
+							toSolveQueue.clear();
+						}
+
+						branchItem.splice(0, branchItem.length); // clear the array
+
+						if(levelMoreThanOne) {
+							toSolveQueue.clear();
+							levelMoreThanOne = false;
+						}
+						
+	//					if(existsGrid81EmptyCellsWithNoOptions(noOptionsEmptyCells)) {
+	//						console.log('  S2: noOptionsEmptyCells.length=', noOptionsEmptyCells.length);
+	//						showGrid81OptionsQuantity();
+	//						newCellValueError = true;
+	//						toSolveQueue.clear();
+	//					} else {
+	//						console.log('  S2: Empty Cells with no Options not found');
+	//					}
+					}
+				} else {
+					// cannot find cell with only one option
+					// so increase options to find
+					level++;
+					levelMoreThanOne = true;
+					console.log('  Increasing level to ', level);
 				}
+
 			} else {
-				// cannot find cell with only one option
-				// so increase options to find
-				level++;
-				 levelMoreThanOne = true;
-				console.log('  Increasing level to ', level);
-			}
+				console.log('  oneOptionTaken is Not Valid against branchStack, so exiting while to get another oneOptionTaken');
+				newCellValueError = true;
+			} // if oneOptionTaken is valid against branchStack
 
 		} // until cannot find cells with 9 number options OR no cells with '_'		
 
