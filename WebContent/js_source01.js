@@ -157,10 +157,12 @@ function findOption(level, theGrid, toSolveQueue, oneOptionTaken, branchItem) {
 	}
 }
 
-function checkOneOptionTakenIsValidAgainstBranchStack(oneOptionTaken, branchStack) {
+function checkOneOptionTakenIsValidAgainstBranchStack(oneOptionTaken/*, branchStack*/) {
 	console.log('In checkOneOptionTakenIsValidAgainstBranchStack(oneOptionTaken=%s, branchStack.length=%s)'
 		, ((oneOptionTaken != null)? oneOptionTaken: '_')
-		, branchStack.length);
+		, branchStack.length());
+
+	printBranchStack('cOOTISABS'/*, branchStack*/);
 
 	var rtnBool = true;
 
@@ -176,17 +178,24 @@ function checkOneOptionTakenIsValidAgainstBranchStack(oneOptionTaken, branchStac
 				return false
 	 */
 
-	if((oneOptionTaken != null) && (branchStack.length > 0)) {
-		while(branchStack[branchStack.length-1][0] > window.prevStack.length()) {
+	if((oneOptionTaken != null) && (branchStack.length() > 0)) {
+//		while(branchStack[branchStack.length()-1][0] > window.prevStack.length()) {
+		while(branchStack.item(branchStack.length()-1)[0] > window.prevStack.length()) {
 			console.log('  cOOTISABS: branchStack[%s][0]=%s, window.prevStack.length()=%s'
-				, branchStack.length-1, branchStack[branchStack.length-1][0], window.prevStack.length());
+				, branchStack.length()-1
+//				, branchStack[branchStack.length()-1][0]
+				, branchStack.item(branchStack.length()-1)[0]
+				, window.prevStack.length());
 			branchStack.pop();
 		} 
 
-	    var lastIndex = branchStack.length - 1;
+	    var lastIndex = branchStack.length() - 1;
 
-		if(oneOptionTaken[0] == branchStack[lastIndex][0]) {
-			if(checkIfCellInBranchStackItem(oneOptionTaken[1], branchStack[lastIndex][2])) {
+//		if(oneOptionTaken[0] == branchStack[lastIndex][0]) {
+		if(oneOptionTaken[0] == branchStack.item(lastIndex)[0]) {
+			if(checkIfCellInBranchStackItem(oneOptionTaken[1]
+//				, branchStack[lastIndex][2])) {
+				, branchStack.item(lastIndex)[2])) {
 				if(!checkIfValid(oneOptionTaken)) {
 					rtnBool = false;
 				} else {
@@ -195,11 +204,15 @@ function checkOneOptionTakenIsValidAgainstBranchStack(oneOptionTaken, branchStac
 			} else {
 				console.log('  cOOTISABS: checkIfCellInBranchStackItem(oneOptionTaken[1]=%s'
 					+', branchStack[%s][2]=%s) => false'
-					, oneOptionTaken[1], lastIndex, branchStack[lastIndex][2], branchStack[lastIndex][0]);
+					, oneOptionTaken[1], lastIndex
+//					, branchStack[lastIndex][2], branchStack[lastIndex][0]);
+					, branchStack.item(lastIndex)[2], branchStack.item(lastIndex)[0]);
 			}
 		} else {
 			console.log('  cOOTISABS: oneOptionTaken[0]=%s != branchStack[%s][0]=%s'
-				, oneOptionTaken[0], lastIndex, branchStack[lastIndex][0]);
+				, oneOptionTaken[0], lastIndex
+//				, branchStack[lastIndex][0]);
+				, branchStack.item(lastIndex)[0]);
 		}
 		
 	}	
@@ -299,8 +312,11 @@ function getNewCellValue(theCell, oldCellValue, oneOptionTaken, branchItem) {
 	}
 
 	// don't think this is useful
-	if(branchItem != null) {
+	if(branchItem.length > 0) {
 		branchItem.push(window.grid81[theCell][5].length); // branchItem[3] = newCellValue
+		console.log('  gNCV: branchItem[%s] = %s, window.grid81[%s][5].length=%s'
+				, (branchItem.length-1), branchItem[branchItem.length-1]
+				, theCell, window.grid81[theCell][5].length);
 	}
 
 	console.log('  gNCV: => grid81['+theCell+'][5]='+window.grid81[theCell][5]
@@ -397,7 +413,7 @@ function getNextCell(toSolveQueue, oneOptionTaken, useOneOptionTaken, branchItem
 		nextCell = toSolveQueue.pop();
 	}
 
-	if(branchItem != null) {
+	if(branchItem.length > 0) {
 		branchItem.push([nextCell]); // branchItem[2] = nextCell
 	}
 
@@ -443,6 +459,7 @@ function checkIfSameArrays(arrayA, arrayB) {
 	if(arrayA.length() != arrayB.length()) {
 		rtnBool = false;
 	} else {
+		console.log('  cISA: arrayA=%s  arrayB=%s', arrayA, arrayB);
 		// check contents
 		while(i < arrayA.length()) {
 			element = arrayA[i]
@@ -475,16 +492,18 @@ function checkIfCellInBranchStackItem(cell, anArray) {
 	return rtnBool;
 }
 
-function findBranchItemInBranchStack(branchItem, branchStack) {
+function findBranchItemInBranchStack(branchItem/*, branchStack*/) {
 	console.log('In findBranchItemInBranchStack(branchItem=%s, branchStack.length=%s)'
-		, branchItem, branchStack.length);
+		, branchItem, branchStack.length());
 
 	var i=0, index;
 
-	if(branchItem.length>0 && branchStack.length>0) {
-		while(i<branchStack.length) {
-			if(branchStack[i][0] == branchItem[0]) { // prevStack.length
-				if(checkIfSameArrays(branchStack[i][1], branchItem[1])) { // toSolveQueue
+	if(branchItem.length>0 && branchStack.length()>0) {
+		while(i<branchStack.length()) {
+//			if(branchStack[i][0] == branchItem[0]) { // prevStack.length
+			if(branchStack.item(i)[0] == branchItem[0]) { // prevStack.length
+//				if(checkIfSameArrays(branchStack[i][1], branchItem[1])) { // toSolveQueue
+				if(checkIfSameArrays(branchStack.item(i)[1], branchItem[1])) { // toSolveQueue
 					index = i;
 					break;
 				}
@@ -497,28 +516,48 @@ function findBranchItemInBranchStack(branchItem, branchStack) {
 	return index;
 }
 
-function addBranchItemCellInBranchStack(branchItem, index, branchStack) {
+function addBranchItemCellInBranchStack(branchItem, indexS/*, branchtack*/) {
 	console.log('In addBranchItemCellInBranchStack(branchItem=%s, index=%s, branchStack[%s][2].length=%s)'
-		, branchItem, index, index, branchStack[index][2].length);
+		, branchItem, index, index
+//		, branchStack[index][2].length);
+		, branchStack.item(index)[2].length);
 
-	if((branchItem[2][0].length == 1) 
-		&& !checkIfCellInBranchStackItem(branchItem[2][0], branchStack[index][2])) {
-		branchStack[index][2].push(branchItem[2][0]);
+	if((branchItem[2].length == 1) 
+		&& !checkIfCellInBranchStackItem(branchItem[2][0]
+//		, branchStack[index][2])) {branchStack[index][2].push(branchItem[2][0]);
+		, branchStack.item(index)[2])) {branchStack.item(index)[2].push(branchItem[2][0]);
 	}
 
-	console.log('  aBICIBS: branchStack[%s][2].length=%s', index, branchStack[index][2].length);
+	console.log('  aBICIBS: branchStack[%s][2].length=%s', index
+//			, branchStack[index][2].length);
+			, branchStack.item(index)[2].length);
 }
 
-function pushValidBranchItemIntoBranchStack(branchItem, branchStack) {
-	console.log('In pushValidBranchItemIntoBranchStack(branchItem=%s, branchStack.length=%s)'
-		, branchItem, branchStack.length);
+function copyArrayContents(branchItem) {
+	var i = 0, tempArray = new Array();
+	
+	while(i < branchItem.length) {
+		tempArray.push(branchItem[i]);
+		i++;
+	}
+}
 
-	var branchStackIndex = 0;
+function pushValidBranchItemIntoBranchStack(branchItem/*, branchStack*/) {
+	console.log('In pushValidBranchItemIntoBranchStack(branchItem=[%s,%s,%s,%s], branchStack.length=%s)'
+		, branchItem[0], branchItem[1], branchItem[2], branchItem[3]
+		, branchStack.length());
+
+	var branchStackIndex = 0, i, tempArray;
 
 	if((branchItem.length > 0) && (branchItem[3] > 2)) {
-		if(branchStack.length == 0) {
-			branchItem.pop(); // don't need to save branchItem[3]=window.grid81[theCell][5].length
-			branchStack.push(branchItem);
+		branchItem.pop(); // don't need to save branchItem[3]=window.grid81[theCell][5].length
+		tempArray = copyArrayContents(branchItem);
+		
+		console.log('  pVBITBS: (branchStack.length=%s == 0) => %s'
+				, branchStack.length(), (branchStack.length() == 0));
+		if(branchStack.length() == 0) {
+//			branchStack.push(branchItem);
+			branchStack.push(tempArray);
 		} else {
 			/*  find branchStack item the same as branchItem
 				if found
@@ -527,17 +566,41 @@ function pushValidBranchItemIntoBranchStack(branchItem, branchStack) {
 					push branchItem as new branchStack item
 			*/
 
-			branchStackIndex = findBranchItemInBranchStack(branchItem, branchStack);
+			branchStackIndex = findBranchItemInBranchStack(branchItem/*, branchStack*/);
 
+			console.log('  pVBITBS: (branchStackIndex=%s != null) => %s'
+					, ((branchStackIndex!=null)?branchStackIndex:'_')
+					, (branchStackIndex != null));
 			if(branchStackIndex != null) {
-				addBranchItemCellInBranchStack(branchItem, branchStackIndex, branchStack);
+				addBranchItemCellInBranchStack(branchItem, branchStackIndex/*, branchStack*/);
 			} else {
-				branchStack.push(branchItem);
+//				branchStack.push(branchItem);
+				branchStack.push(tempArray);
 			}
 		}
+	} else {
+		console.log('  pVBITBS: ((branchItem.length=%s > 0) && (branchItem[3]=%s > 2)) => false'
+				, branchItem.length, branchItem[3]);
 	}
 
-	console.log('  pVBITBS: branchStack.length=', branchStack.length);
+	console.log('  pVBITBS: branchStack.length=%s', branchStack.length());
+	
+	printBranchStack('pVBITBS'/*, branchStack*/);
+}
+
+function printBranchStack(origin/*, branchStack*/) {
+	if(branchStack.length() > 0) {
+		var i = 0
+		while(i<branchStack.length()) {
+			console.log('  '+origin+': branchStack=%s, branchStack[%s] = %s = [%s, %s, %s]'
+					, branchStack, i
+//					, branchStack[i]
+//					, branchStack[i][0], branchStack[i][1], branchStack[i][2]);
+					, branchStack.item(i)
+					, branchStack.item(i)[0], branchStack.item(i)[1], branchStack.item(i)[2]);
+			i++;
+		}
+	}
 }
 
 function solve() {
@@ -576,9 +639,10 @@ function solve2() {
 		, levelMoreThanOne = false, doStepBacks = true
 		, noOptionsEmptyCells = new Array()
 		, maxLoop = 100, loopCount = 0/*, breakExit = false*/
-		, branchItem = new Array()
-		, branchStack = new Array();
-
+		, branchItem = new Array();
+	
+//	window.branchStack = new Array();
+	window.branchStack = new Stack();
 	window.optionsTaken = new Stack();	
 	window.useOneOptionTaken = false;
 
@@ -594,8 +658,9 @@ function solve2() {
 			// if(level>1) {
 				showGrid81OptionsQuantity();
 			// }
+//			printBranchStack('s2'/*, branchStack*/);
 
-			if(checkOneOptionTakenIsValidAgainstBranchStack(oneOptionTaken, branchStack)) {
+			if(checkOneOptionTakenIsValidAgainstBranchStack(oneOptionTaken/*, branchStack*/)) {
 
 				if(findOption(level, window.grid81, toSolveQueue, oneOptionTaken, branchItem) 
 					/*&& repeat<10*/ 
@@ -642,9 +707,10 @@ function solve2() {
 							console.log('  changing value in cell '+nextCell
 								+' from '+oldCellValue+' to '+newCellValue);
 
-							pushValidBranchItemIntoBranchStack(branchItem, branchStack);
-
+							pushValidBranchItemIntoBranchStack(branchItem/*, branchStack*/);
+							
 							changeCellValue(nextCell, newCellValue);
+//							printBranchStack('s2'/*, branchStack*/);
 					
 							updateStepCount(1);
 							resetNextStepCount(newCellValue);
@@ -659,8 +725,10 @@ function solve2() {
 							newCellValueError = true;
 							toSolveQueue.clear();
 						}
-
+						
+						printBranchStack('s2'/*, branchStack*/);
 						branchItem.splice(0, branchItem.length); // clear the array
+						printBranchStack('s2'/*, branchStack*/);
 
 						if(levelMoreThanOne) {
 							toSolveQueue.clear();
@@ -688,6 +756,8 @@ function solve2() {
 				console.log('  oneOptionTaken is Not Valid against branchStack, so exiting while to get another oneOptionTaken');
 				newCellValueError = true;
 			} // if oneOptionTaken is valid against branchStack
+			
+//			printBranchStack('s2'/*, branchStack*/);
 
 		} // until cannot find cells with 9 number options OR no cells with '_'		
 
