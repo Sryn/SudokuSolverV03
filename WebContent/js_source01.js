@@ -35,6 +35,10 @@ function Stack() {
 			return false;
 		}
 	}
+	
+	this.print = function() {
+		return JSON.stringify(this.stac);
+	}
 
 	// https://appendto.com/2016/02/empty-array-javascript/?nabe=4834138299564032:0,5488687288942592:0,5685334715400192:1,6035677076783104:0,6118337346273280:1&utm_referrer=https%3A%2F%2Fwww.google.com.sg%2F
 	this.clear = function() {
@@ -79,6 +83,7 @@ function existsGrid81EmptyCellsWithNoOptions(noOptionsEmptyCells) {
 	// return true if exists, else false
 	// the array will be updated in origin if changed, as per JavaScript specs
 	if(noOptionsEmptyCells.length > 0) {
+		console.log('  eG81ECWNO: => true, noOptionsEmptyCells=', noOptionsEmptyCells);
 		return true;
 	} else {
 		return false;
@@ -179,14 +184,19 @@ function checkOneOptionTakenIsValidAgainstBranchStack(oneOptionTaken/*, branchSt
 	 */
 
 	if((oneOptionTaken != null) && (branchStack.length() > 0)) {
-//		while(branchStack[branchStack.length()-1][0] > window.prevStack.length()) {
-		while(branchStack.item(branchStack.length()-1)[0] > window.prevStack.length()) {
-			console.log('  cOOTISABS: branchStack[%s][0]=%s, window.prevStack.length()=%s'
+		console.log('  cOOTISABS: branchStack[%s][0]=%s, window.prevStack.length()=%s'
 				, branchStack.length()-1
 //				, branchStack[branchStack.length()-1][0]
 				, branchStack.item(branchStack.length()-1)[0]
 				, window.prevStack.length());
+//		while(branchStack[branchStack.length()-1][0] > window.prevStack.length()) {
+		while(branchStack.item(branchStack.length()-1)[0] > window.prevStack.length()) {
 			branchStack.pop();
+			console.log('  cOOTISABS: branchStack[%s][0]=%s, window.prevStack.length()=%s'
+					, branchStack.length()-1
+//					, branchStack[branchStack.length()-1][0]
+					, branchStack.item(branchStack.length()-1)[0]
+					, window.prevStack.length());
 		} 
 
 	    var lastIndex = branchStack.length() - 1;
@@ -197,7 +207,7 @@ function checkOneOptionTakenIsValidAgainstBranchStack(oneOptionTaken/*, branchSt
 //				, branchStack[lastIndex][2])) {
 				, branchStack.item(lastIndex)[2])) {
 				if(!checkIfValid(oneOptionTaken)) {
-					rtnBool = false;
+					rtnBool = false; // should get another cell in branchStack (?)
 				} else {
 					console.log('  cOOTISABS: !checkIfValid(oneOptionTaken=%s) => false', oneOptionTaken);
 				}
@@ -222,10 +232,25 @@ function checkOneOptionTakenIsValidAgainstBranchStack(oneOptionTaken/*, branchSt
 }
 
 function getRandomNumber(inclusiveLowerBound, inclusiveUpperBound) {
-	var randomNumber = Math.floor((Math.random() * inclusiveUpperBound) + inclusiveLowerBound);
 	console.log('In getRandomNumber(inclusiveLowerBound='+inclusiveLowerBound
-		+', inclusiveUpperBound='+inclusiveUpperBound
-		+') => randomNumber='+randomNumber);
+			+', inclusiveUpperBound='+inclusiveUpperBound
+			+')');
+	var randomNumber, oneAdjust = 0;
+	
+	// this is for when Math.floor of random(0,1) will only result in 1 when Math.random is 1.0
+	if(inclusiveUpperBound == 1 && inclusiveLowerBound == 0) {
+		oneAdjust = 1;
+	}
+	
+	if(!window.useRandomArray && (window.randomArray.length > 0)) {
+		randomNumber = Math.floor((Math.random() * (inclusiveUpperBound+oneAdjust)) + (inclusiveLowerBound+oneAdjust)) - oneAdjust;
+		console.log('  gRN: => randomNumber='+randomNumber);		
+		window.randomArray.push(randomNumber);		
+	} else {
+		randomNumber = window.randomArray.shift();
+		console.log('  gRN: =>  shifting randomNumber='+randomNumber
+				+' from window.randomArray.length='+window.randomArray.length);		
+	}
 	return randomNumber;
 }
 
@@ -449,36 +474,65 @@ function getOneValidOptionTaken(optionsTaken) {
 	return oneOptionTaken;
 }
 
+function getArrayFromStac(a_stac) {
+	var an_array = new Array(), i=0;
+	
+	while(i < a_stac.length()) {
+		an_array.push(a_stac.item(i));
+		i++;
+	}
+	
+	return an_array;
+}
+
 // this is working on the toSolveQueue stacs
 function checkIfSameArrays(arrayA, arrayB) {
 	console.log('In checkIfSameArrays(arrayA.length=%s, arrayB.length=%s)'
 		, arrayA.length(), arrayB.length());
 
-	var rtnBool = true, i=0, element;
+	var rtnBool = true, i=0, element, arrayA1 = new Array(), arrayB1 = new Array();
 
-	if(arrayA.length() != arrayB.length()) {
+	arrayA1 = getArrayFromStac(arrayA);
+	arrayB1 = getArrayFromStac(arrayB);
+//	console.log('  cISA: \n\tarrayA1=%s \n\tarrayB1=%s', arrayA1, arrayB1);
+	console.log('  cISA: \n\tarrayA1=%s \n\tarrayB1=%s', JSON.stringify(arrayA1), JSON.stringify(arrayB1));
+
+//	if(arrayA.length() != arrayB.length()) {
+//		rtnBool = false;
+//	} else {
+////		console.log('  cISA: arrayA=%s  arrayB=%s', arrayA, arrayB);
+//		console.log('  cISA: \n\tarrayA=%s \n\tarrayB=%s', arrayA.print(), arrayB.print());
+//		// check contents
+//		while(i < arrayA.length()) {
+//			element = arrayA[i];
+//
+//			if(!arrayB.includes(element)) {
+//				rtnBool = false;
+//				break;
+//			}
+//
+//			i++;
+//		}
+//	}
+	
+	if(arrayA1.length != arrayB1.length) {
 		rtnBool = false;
 	} else {
-		console.log('  cISA: arrayA=%s  arrayB=%s', arrayA, arrayB);
-		// check contents
-		while(i < arrayA.length()) {
-			element = arrayA[i]
-
-			if(!arrayB.includes(element)) {
+		while(i < arrayA1.length) {
+			if(!arrayB1.includes(arrayA1[i])) {
 				rtnBool = false;
 				break;
-			};
-
+			}
 			i++;
 		}
 	}
-
+	
 	console.log('  cISA: rtnBool=', rtnBool);
 	return rtnBool;
 }
 
 function checkIfCellInBranchStackItem(cell, anArray) {
-	console.log('In checkIfCellInBranchStackItem(cell=%s, anArray=%s)');
+	console.log('In checkIfCellInBranchStackItem(cell=%s, anArray=%s)', cell, anArray);
 
 	var rtnBool = false;
 
@@ -496,10 +550,10 @@ function findBranchItemInBranchStack(branchItem/*, branchStack*/) {
 	console.log('In findBranchItemInBranchStack(branchItem=%s, branchStack.length=%s)'
 		, branchItem, branchStack.length());
 
-	var i=0, index;
+	var i=branchStack.length()-1, index;
 
 	if(branchItem.length>0 && branchStack.length()>0) {
-		while(i<branchStack.length()) {
+		while(i>=0) {
 //			if(branchStack[i][0] == branchItem[0]) { // prevStack.length
 			if(branchStack.item(i)[0] == branchItem[0]) { // prevStack.length
 //				if(checkIfSameArrays(branchStack[i][1], branchItem[1])) { // toSolveQueue
@@ -508,7 +562,7 @@ function findBranchItemInBranchStack(branchItem/*, branchStack*/) {
 					break;
 				}
 			} 
-			i++;
+			i--;
 		}
 	}
 
@@ -516,16 +570,31 @@ function findBranchItemInBranchStack(branchItem/*, branchStack*/) {
 	return index;
 }
 
-function addBranchItemCellInBranchStack(branchItem, indexS/*, branchtack*/) {
-	console.log('In addBranchItemCellInBranchStack(branchItem=%s, index=%s, branchStack[%s][2].length=%s)'
-		, branchItem, index, index
+function addBranchItemCellInBranchStack(branchItem, index/*, branchStack*/) {
+	console.log('In addBranchItemCellInBranchStack(branchItem[2][0]=%s, index=%s, branchStack[%s][2].length=%s)'
+		, branchItem[2][0], index, index
 //		, branchStack[index][2].length);
 		, branchStack.item(index)[2].length);
 
+	var cICIBSI = checkIfCellInBranchStackItem(branchItem[2][0], branchStack.item(index)[2]);
+	
 	if((branchItem[2].length == 1) 
-		&& !checkIfCellInBranchStackItem(branchItem[2][0]
-//		, branchStack[index][2])) {branchStack[index][2].push(branchItem[2][0]);
-		, branchStack.item(index)[2])) {branchStack.item(index)[2].push(branchItem[2][0]);
+		&& !cICIBSI) {		
+//		, branchStack[index][2])) {
+//		branchStack[index][2].push(branchItem[2][0]);
+		
+		branchStack.item(index)[2].push(branchItem[2][0]);
+	} else {
+		console.log('  aBICIBS: (branchItem[2].length/%s/ == 1)/%s/ '
+				+'&& !checkIfCellInBranchStackItem(branchItem[2][0]/%s/'
+				+', branchStack.item(index/%s/)[2]/%s/)/%s/ => %s'
+				, branchItem[2].length
+				, (branchItem[2].length == 1)
+				, branchItem[2][0]
+				, index
+				, JSON.stringify(branchStack.item(index)[2])
+				, !cICIBSI
+				, false);		
 	}
 
 	console.log('  aBICIBS: branchStack[%s][2].length=%s', index
@@ -533,6 +602,7 @@ function addBranchItemCellInBranchStack(branchItem, indexS/*, branchtack*/) {
 			, branchStack.item(index)[2].length);
 }
 
+// not confident this is working
 function copyArrayContents(branchItem) {
 	var i = 0, tempArray = new Array();
 	
@@ -542,22 +612,31 @@ function copyArrayContents(branchItem) {
 	}
 }
 
+// this worked
+function pushIntoArray(toArray, fromArray) {
+	if(toArray != null && fromArray != null) {
+		toArray.push(fromArray.splice(0, fromArray.length));		
+	}
+}
+
 function pushValidBranchItemIntoBranchStack(branchItem/*, branchStack*/) {
 	console.log('In pushValidBranchItemIntoBranchStack(branchItem=[%s,%s,%s,%s], branchStack.length=%s)'
 		, branchItem[0], branchItem[1], branchItem[2], branchItem[3]
 		, branchStack.length());
 
-	var branchStackIndex = 0, i, tempArray;
+	var branchStackIndex = 0, i;
 
 	if((branchItem.length > 0) && (branchItem[3] > 2)) {
+//		console.log('  pVBITBS: branchItem.length()=', branchItem.length);
 		branchItem.pop(); // don't need to save branchItem[3]=window.grid81[theCell][5].length
-		tempArray = copyArrayContents(branchItem);
+//		console.log('  pVBITBS: branchItem.length()=', branchItem.length);
+//		tempArray = copyArrayContents(branchItem);
 		
 		console.log('  pVBITBS: (branchStack.length=%s == 0) => %s'
 				, branchStack.length(), (branchStack.length() == 0));
 		if(branchStack.length() == 0) {
 //			branchStack.push(branchItem);
-			branchStack.push(tempArray);
+			pushIntoArray(branchStack, branchItem);
 		} else {
 			/*  find branchStack item the same as branchItem
 				if found
@@ -575,7 +654,7 @@ function pushValidBranchItemIntoBranchStack(branchItem/*, branchStack*/) {
 				addBranchItemCellInBranchStack(branchItem, branchStackIndex/*, branchStack*/);
 			} else {
 //				branchStack.push(branchItem);
-				branchStack.push(tempArray);
+				pushIntoArray(branchStack, branchItem);
 			}
 		}
 	} else {
@@ -658,7 +737,6 @@ function solve2() {
 			// if(level>1) {
 				showGrid81OptionsQuantity();
 			// }
-//			printBranchStack('s2'/*, branchStack*/);
 
 			if(checkOneOptionTakenIsValidAgainstBranchStack(oneOptionTaken/*, branchStack*/)) {
 
@@ -675,7 +753,8 @@ function solve2() {
 					while((toSolveQueue.length() > 0) && !newCellValueError) {
 						console.log('  s2: repeat='+ repeat++ 
 							+' level='+level
-							+' toSolveQueue.length()='+toSolveQueue.length());
+							+' toSolveQueue.length()='+toSolveQueue.length()
+							+'='+JSON.stringify(toSolveQueue));
 
 						if(/*window.doContinuePopUp &&*/ (loopCount >= maxLoop)) {
 							if(confirm('Exit while loopCount='
@@ -710,7 +789,6 @@ function solve2() {
 							pushValidBranchItemIntoBranchStack(branchItem/*, branchStack*/);
 							
 							changeCellValue(nextCell, newCellValue);
-//							printBranchStack('s2'/*, branchStack*/);
 					
 							updateStepCount(1);
 							resetNextStepCount(newCellValue);
@@ -726,9 +804,9 @@ function solve2() {
 							toSolveQueue.clear();
 						}
 						
-						printBranchStack('s2'/*, branchStack*/);
+//						printBranchStack('s2'/*, branchStack*/);
 						branchItem.splice(0, branchItem.length); // clear the array
-						printBranchStack('s2'/*, branchStack*/);
+//						printBranchStack('s2'/*, branchStack*/);
 
 						if(levelMoreThanOne) {
 							toSolveQueue.clear();
@@ -753,12 +831,11 @@ function solve2() {
 				}
 
 			} else {
+				// should recurse to decrease toSolveQueue options (?)
 				console.log('  oneOptionTaken is Not Valid against branchStack, so exiting while to get another oneOptionTaken');
 				newCellValueError = true;
 			} // if oneOptionTaken is valid against branchStack
 			
-//			printBranchStack('s2'/*, branchStack*/);
-
 		} // until cannot find cells with 9 number options OR no cells with '_'		
 
 		if(stillCellsWith_()) {
@@ -825,6 +902,8 @@ function doSolve2() {
 	} else {
 		console.log('  dS2: solve2()=', solve2());
 	}
+	
+	console.log('  dS2: randomArray=', randomArray);
 }
 
 function createArrays() {
@@ -2406,5 +2485,9 @@ function initialise() {
 	showStepCountArray();
 	showArrayValues();
     showGrid81Values();    
+    
+    window.randomArray = new Array();
+    window.useRandomArray = false;
+    window.randomArray = [2, 1, 1, 0, 1, 4, 1, 0, 2, 10, 2, 0, 11, 1, 8, 2, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 12, 1, 0, 0, 0, 6, 2, 2, 1, 2, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 3, 1, 3, 2, 0, 0, 5, 4, 0, 0, 1, 5, 2, 0, 0, 0, 1, 0, 0];
 }
 
