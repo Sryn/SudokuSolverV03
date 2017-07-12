@@ -8,6 +8,7 @@ Commit History Comments:
 * July 10, 2017
 	- Implemented a still broken algorithm to try other cells in a level>1 toSolveQueue, when a tried cell led to an blocked grid, instead of the current algorithm that would recursively retrace back to an earlier level>1 toSolveQueue branch, if available.
 
+
 * July 7, 2017
 	- Rearranged files
 	- Made the Assets folder

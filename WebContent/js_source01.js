@@ -136,16 +136,6 @@ function findOption(level, theGrid, toSolveQueue, oneOptionTaken, branchItem) {
 		}
 	}
 
-	// taking the same cell as in oneOptionTaken, if found, 
-	// and place it at the end for it to be the first one to pop later
-	if((oneOptionTaken != null) 
-		&& (oneOptionTakenFound != null) 
-		&& (toSolveQueue.length() > 0) 
-		&& (toSolveQueue.length() >= oneOptionTakenFound)) {
-		temp_i = toSolveQueue.splice(oneOptionTakenFound-1, 1);
-		toSolveQueue.push(temp_i[0]);
-	}
-
 	console.log('  fO: => %s toSolveQueue.length()=%s, oneOptionTakenFound=%s'
 		, (toSolveQueue.length() > 0), toSolveQueue.length(), ((oneOptionTakenFound!=null)?oneOptionTakenFound:'_'));
 
@@ -154,6 +144,29 @@ function findOption(level, theGrid, toSolveQueue, oneOptionTaken, branchItem) {
 		branchItem.push(window.prevStack.length()); // branchItem[0] = window.prevStack.length()
 		branchItem.push(toSolveQueue) // branchItem[1] = toSolveQueue
 	}
+
+	// taking the same cell as in oneOptionTaken, if found, 
+	// and place it at the end for it to be the first one to pop later
+	if((oneOptionTaken != null) 
+		&& (oneOptionTakenFound != null) 
+		&& (toSolveQueue.length() > 0) 
+		&& (toSolveQueue.length() >= oneOptionTakenFound)) {
+
+			temp_i = toSolveQueue.splice(oneOptionTakenFound-1, 1);
+			// toSolveQueue.push(temp_i[0]);
+
+			// can't use this as I need toSolveQueue to be consistent for branchStack
+			// will try cIV in gNC
+			if(checkIfValid(oneOptionTaken)) {
+				toSolveQueue.push(temp_i[0]);
+				console.log('  fO: keeping valid oneOptionTaken=%s', oneOptionTaken);
+			} else {
+				console.log('  fO: discarding invalid oneOptionTaken=%s', oneOptionTaken);
+			}
+	}
+
+	console.log('  fO: => %s toSolveQueue.length()=%s, oneOptionTakenFound=%s'
+		, (toSolveQueue.length() > 0), toSolveQueue.length(), ((oneOptionTakenFound!=null)?oneOptionTakenFound:'_'));
 
 	if(toSolveQueue.length() > 0) {
 		return true;
@@ -184,33 +197,38 @@ function checkOneOptionTakenIsValidAgainstBranchStack(oneOptionTaken/*, branchSt
 	 */
 
 	if((oneOptionTaken != null) && (branchStack.length() > 0)) {
-		console.log('  cOOTISABS: branchStack[%s][0]=%s, window.prevStack.length()=%s'
-				, branchStack.length()-1
-//				, branchStack[branchStack.length()-1][0]
-				, branchStack.item(branchStack.length()-1)[0]
-				, window.prevStack.length());
-//		while(branchStack[branchStack.length()-1][0] > window.prevStack.length()) {
-		while(branchStack.item(branchStack.length()-1)[0] > window.prevStack.length()) {
-			branchStack.pop();
-			console.log('  cOOTISABS: branchStack[%s][0]=%s, window.prevStack.length()=%s'
-					, branchStack.length()-1
-//					, branchStack[branchStack.length()-1][0]
-					, branchStack.item(branchStack.length()-1)[0]
-					, window.prevStack.length());
-		} 
+// 		console.log('  cOOTISABS: branchStack[%s][0]=%s, window.prevStack.length()=%s'
+// 				, branchStack.length()-1
+// //				, branchStack[branchStack.length()-1][0]
+// 				, branchStack.item(branchStack.length()-1)[0]
+// 				, window.prevStack.length());
+// //		while(branchStack[branchStack.length()-1][0] > window.prevStack.length()) {
+// 		while(branchStack.item(branchStack.length()-1)[0] > window.prevStack.length()) {
+// 			branchStack.pop();
+// 			console.log('  cOOTISABS: branchStack[%s][0]=%s, window.prevStack.length()=%s'
+// 					, branchStack.length()-1
+// //					, branchStack[branchStack.length()-1][0]
+// 					, branchStack.item(branchStack.length()-1)[0]
+// 					, window.prevStack.length());
+// 		} 
 
 	    var lastIndex = branchStack.length() - 1;
 
 //		if(oneOptionTaken[0] == branchStack[lastIndex][0]) {
-		if(oneOptionTaken[0] == branchStack.item(lastIndex)[0]) {
+		if(oneOptionTaken[0] == branchStack.item(lastIndex)[0]) { // prevStack.length
 			if(checkIfCellInBranchStackItem(oneOptionTaken[1]
 //				, branchStack[lastIndex][2])) {
 				, branchStack.item(lastIndex)[2])) {
-				if(!checkIfValid(oneOptionTaken)) {
-					rtnBool = false; // should get another cell in branchStack (?)
-				} else {
-					console.log('  cOOTISABS: !checkIfValid(oneOptionTaken=%s) => false', oneOptionTaken);
-				}
+
+				// should we do this here now?
+				// as I'm now already doing this in fO
+				// if(!checkIfValid(oneOptionTaken)) {
+				// 	rtnBool = false; // should get another cell in branchStack (?)
+				// } else {
+				// 	console.log('  cOOTISABS: !checkIfValid(oneOptionTaken=%s) => false', oneOptionTaken);
+				// }
+
+				rtnBool = false;
 			} else {
 				console.log('  cOOTISABS: checkIfCellInBranchStackItem(oneOptionTaken[1]=%s'
 					+', branchStack[%s][2]=%s) => false'
@@ -409,34 +427,40 @@ function getNextCell(toSolveQueue, oneOptionTaken, useOneOptionTaken, branchItem
 	
 	var i, randomNumber, nextCell, nextCellArrayOfOne, oneOptionTakenIndex;
 
-	if(toSolveQueue.length() > 1) {
-		if((oneOptionTaken != null) && useOneOptionTaken) {
-			
-//			while(!checkIfValid(oneOptionTaken) && (window.optionsTaken.length() > 0)) {
-//				oneOptionTaken = window.optionsTaken.pop();
-//			}
-			
-			console.log('  gNC: oneOptionTaken[%s][%s][%s][%s]'
-					, oneOptionTaken[0], oneOptionTaken[1], oneOptionTaken[2], oneOptionTaken[3]);
-			for(i=0; i<toSolveQueue.length(); i++) {
-				console.log('  gNC: toSolveQueue.item(%i)=%s', i, toSolveQueue.item(i));
-				if(toSolveQueue.item(i) == oneOptionTaken[1]) {
-					oneOptionTakenIndex = i;
-					break;
-				}
-			}
+	// while(nextCell == null) {
+		if(toSolveQueue.length() > 1) {
+			if((oneOptionTaken != null) && useOneOptionTaken) {
+				
+	//			while(!checkIfValid(oneOptionTaken) && (window.optionsTaken.length() > 0)) {
+	//				oneOptionTaken = window.optionsTaken.pop();
+	//			}
+				// if(checkIfValid(oneOptionTaken)) {
+					console.log('  gNC: oneOptionTaken[%s][%s][%s][%s]'
+							, oneOptionTaken[0], oneOptionTaken[1], oneOptionTaken[2], oneOptionTaken[3]);
+					for(i=0; i<toSolveQueue.length(); i++) {
+						console.log('  gNC: toSolveQueue.item(%i)=%s', i, toSolveQueue.item(i));
+						if(toSolveQueue.item(i) == oneOptionTaken[1]) {
+							oneOptionTakenIndex = i;
+							break;
+						}
+					}
 
-			nextCellArrayOfOne = toSolveQueue.splice(oneOptionTakenIndex, 1);	
-			nextCell = nextCellArrayOfOne[0];		
-			window.useOneOptionTaken = false;				
+					nextCellArrayOfOne = toSolveQueue.splice(oneOptionTakenIndex, 1);	
+					nextCell = nextCellArrayOfOne[0];		
+					window.useOneOptionTaken = false;				
+				// } else {
+				// 	console.log('  gNC: checkIfValid(oneOptionTaken) => false ');
+				// 	useOneOptionTaken = false;
+				// }
+			} else {
+				randomNumber = getRandomNumber(0, toSolveQueue.length()-1);	
+				nextCellArrayOfOne = toSolveQueue.splice(randomNumber, 1);	
+				nextCell = nextCellArrayOfOne[0];			
+			}
 		} else {
-			randomNumber = getRandomNumber(0, toSolveQueue.length()-1);	
-			nextCellArrayOfOne = toSolveQueue.splice(randomNumber, 1);	
-			nextCell = nextCellArrayOfOne[0];			
+			nextCell = toSolveQueue.pop();
 		}
-	} else {
-		nextCell = toSolveQueue.pop();
-	}
+	// } // while(nextCell == null)
 
 	if(branchItem.length > 0) {
 		branchItem.push([nextCell]); // branchItem[2] = nextCell
@@ -738,7 +762,30 @@ function solve2() {
 				showGrid81OptionsQuantity();
 			// }
 
-			if(checkOneOptionTakenIsValidAgainstBranchStack(oneOptionTaken/*, branchStack*/)) {
+			while((!checkOneOptionTakenIsValidAgainstBranchStack(oneOptionTaken/*, branchStack*/))
+				&& (branchStack.length() > 0)) {
+				console.log('  cOOTISABS: branchStack[%s][0]=%s, window.prevStack.length()=%s'
+						, branchStack.length()-1
+		//				, branchStack[branchStack.length()-1][0]
+						, branchStack.item(branchStack.length()-1)[0]
+						, window.prevStack.length());
+		//		while(branchStack[branchStack.length()-1][0] > window.prevStack.length()) {
+				if(branchStack.item(branchStack.length()-1)[0] > window.prevStack.length()) {
+					branchStack.pop();
+					console.log('  cOOTISABS: branchStack[%s][0]=%s, window.prevStack.length()=%s'
+							, branchStack.length()-1
+		//					, branchStack[branchStack.length()-1][0]
+							, branchStack.item(branchStack.length()-1)[0]
+							, window.prevStack.length());
+				} else {
+					break;
+				}
+			// } else {
+			// 	// should recurse to decrease toSolveQueue options (?) - in fO already
+			// 	// how about recurse to decrease branchStack (?)
+			// 	console.log('  oneOptionTaken is Not Valid against branchStack, so exiting while to get another oneOptionTaken');
+			// 	// newCellValueError = true;
+			} // if oneOptionTaken is valid against branchStack			
 
 				if(findOption(level, window.grid81, toSolveQueue, oneOptionTaken, branchItem) 
 					/*&& repeat<10*/ 
@@ -830,12 +877,6 @@ function solve2() {
 					console.log('  Increasing level to ', level);
 				}
 
-			} else {
-				// should recurse to decrease toSolveQueue options (?)
-				console.log('  oneOptionTaken is Not Valid against branchStack, so exiting while to get another oneOptionTaken');
-				newCellValueError = true;
-			} // if oneOptionTaken is valid against branchStack
-			
 		} // until cannot find cells with 9 number options OR no cells with '_'		
 
 		if(stillCellsWith_()) {
