@@ -142,7 +142,7 @@ function findOption(level, theGrid, toSolveQueue, oneOptionTaken, branchItem) {
 	// we only need to record when the algorithm chooses between more than one option
 	if((level > 1) && ((toSolveQueue.length() > 0))) {
 		branchItem.push(window.prevStack.length()); // branchItem[0] = window.prevStack.length()
-		branchItem.push(toSolveQueue) // branchItem[1] = toSolveQueue
+		branchItem.push(getArrayFromStac(toSolveQueue)); // branchItem[1] = toSolveQueue
 	}
 
 	// taking the same cell as in oneOptionTaken, if found, 
@@ -159,9 +159,10 @@ function findOption(level, theGrid, toSolveQueue, oneOptionTaken, branchItem) {
 			// will try cIV in gNC
 			if(checkIfValid(oneOptionTaken)) {
 				toSolveQueue.push(temp_i[0]);
-				console.log('  fO: keeping valid oneOptionTaken=%s', oneOptionTaken);
+				console.log('  fO: keeping valid oneOptionTaken=%s cell in toSolveQueue', JSON.stringify(oneOptionTaken));
 			} else {
-				console.log('  fO: discarding invalid oneOptionTaken=%s', oneOptionTaken);
+				window.useOneOptionTaken = false;
+				console.log('  fO: discarding invalid oneOptionTaken=%s cell from toSolveQueue and setting window.useOneOptionTaken to false;', JSON.stringify(oneOptionTaken));
 			}
 	}
 
@@ -180,7 +181,7 @@ function checkOneOptionTakenIsValidAgainstBranchStack(oneOptionTaken/*, branchSt
 		, ((oneOptionTaken != null)? oneOptionTaken: '_')
 		, branchStack.length());
 
-	printBranchStack('cOOTISABS'/*, branchStack*/);
+	printBranchStack('cOOTIVABS'/*, branchStack*/);
 
 	var rtnBool = true;
 
@@ -230,14 +231,14 @@ function checkOneOptionTakenIsValidAgainstBranchStack(oneOptionTaken/*, branchSt
 
 				rtnBool = false;
 			} else {
-				console.log('  cOOTISABS: checkIfCellInBranchStackItem(oneOptionTaken[1]=%s'
+				console.log('  cOOTIVABS: checkIfCellInBranchStackItem(oneOptionTaken[1]=%s'
 					+', branchStack[%s][2]=%s) => false'
 					, oneOptionTaken[1], lastIndex
 //					, branchStack[lastIndex][2], branchStack[lastIndex][0]);
 					, branchStack.item(lastIndex)[2], branchStack.item(lastIndex)[0]);
 			}
 		} else {
-			console.log('  cOOTISABS: oneOptionTaken[0]=%s != branchStack[%s][0]=%s'
+			console.log('  cOOTIVABS: oneOptionTaken[0]=%s != branchStack[%s][0]=%s'
 				, oneOptionTaken[0], lastIndex
 //				, branchStack[lastIndex][0]);
 				, branchStack.item(lastIndex)[0]);
@@ -245,7 +246,7 @@ function checkOneOptionTakenIsValidAgainstBranchStack(oneOptionTaken/*, branchSt
 		
 	}	
 
-	console.log('  cOOTISABS: rtnBool=', rtnBool);
+	console.log('  cOOTIVABS: rtnBool=', rtnBool);
 	return rtnBool;
 }
 
@@ -509,15 +510,26 @@ function getArrayFromStac(a_stac) {
 	return an_array;
 }
 
+function getArrayFromArray(fromArray) {
+	var rtnArray = new Array(), i=0;
+	
+	while(i < fromArray.length) {
+		rtnArray.push(fromArray[i]);
+		i++;
+	}
+	
+	return rtnArray;
+}
+
 // this is working on the toSolveQueue stacs
 function checkIfSameArrays(arrayA, arrayB) {
 	console.log('In checkIfSameArrays(arrayA.length=%s, arrayB.length=%s)'
-		, arrayA.length(), arrayB.length());
+		, arrayA.length, arrayB.length);
 
 	var rtnBool = true, i=0, element, arrayA1 = new Array(), arrayB1 = new Array();
 
-	arrayA1 = getArrayFromStac(arrayA);
-	arrayB1 = getArrayFromStac(arrayB);
+	arrayA1 = getArrayFromArray(arrayA);
+	arrayB1 = getArrayFromArray(arrayB);
 //	console.log('  cISA: \n\tarrayA1=%s \n\tarrayB1=%s', arrayA1, arrayB1);
 	console.log('  cISA: \n\tarrayA1=%s \n\tarrayB1=%s', JSON.stringify(arrayA1), JSON.stringify(arrayB1));
 
@@ -644,11 +656,11 @@ function pushIntoArray(toArray, fromArray) {
 }
 
 function pushValidBranchItemIntoBranchStack(branchItem/*, branchStack*/) {
-	console.log('In pushValidBranchItemIntoBranchStack(branchItem=[%s,%s,%s,%s], branchStack.length=%s)'
-		, branchItem[0], branchItem[1], branchItem[2], branchItem[3]
+	console.log('In pushValidBranchItemIntoBranchStack(branchItem=[%s,%s,[%s],%s], branchStack.length=%s)'
+		, branchItem[0], branchItem[1], ((branchItem[2] != null)?branchItem[2].toString():'Null'), branchItem[3]
 		, branchStack.length());
 
-	var branchStackIndex = 0, i;
+	var branchStackIndex, i;
 
 	if((branchItem.length > 0) && (branchItem[3] > 2)) {
 //		console.log('  pVBITBS: branchItem.length()=', branchItem.length);
@@ -772,12 +784,17 @@ function solve2() {
 		//		while(branchStack[branchStack.length()-1][0] > window.prevStack.length()) {
 				if(branchStack.item(branchStack.length()-1)[0] > window.prevStack.length()) {
 					branchStack.pop();
-					console.log('  cOOTISABS: branchStack[%s][0]=%s, window.prevStack.length()=%s'
+					console.log('  cOOTISABS: branchStack[%s][0]=%s > window.prevStack.length()=%s => popping branchStack'
 							, branchStack.length()-1
 		//					, branchStack[branchStack.length()-1][0]
 							, branchStack.item(branchStack.length()-1)[0]
 							, window.prevStack.length());
 				} else {
+					console.log('  cOOTISABS: branchStack[%s][0]=%s !> window.prevStack.length()=%s => break from while'
+							, branchStack.length()-1
+		//					, branchStack[branchStack.length()-1][0]
+							, branchStack.item(branchStack.length()-1)[0]
+							, window.prevStack.length());
 					break;
 				}
 			// } else {
@@ -799,7 +816,6 @@ function solve2() {
 					// when I just change one of the cells in toSolveQueue
 					while((toSolveQueue.length() > 0) && !newCellValueError) {
 						console.log('  s2: repeat='+ repeat++ 
-							+' level='+level
 							+' toSolveQueue.length()='+toSolveQueue.length()
 							+'='+JSON.stringify(toSolveQueue));
 
@@ -877,6 +893,13 @@ function solve2() {
 					console.log('  Increasing level to ', level);
 				}
 
+				// clearing oneOptionTaken as I don't need its data
+				// beyond the first iteration after getOneValidOptionTaken(optionsTaken)
+				// //broke my loop when level>1 and still need to know oneOptionTaken
+				if(!useOneOptionTaken && oneOptionTaken != null) {
+//					oneOptionTaken.splice(0, oneOptionTaken.length);
+					oneOptionTaken = null;
+				}
 		} // until cannot find cells with 9 number options OR no cells with '_'		
 
 		if(stillCellsWith_()) {
@@ -2529,6 +2552,6 @@ function initialise() {
     
     window.randomArray = new Array();
     window.useRandomArray = false;
-    window.randomArray = [2, 1, 1, 0, 1, 4, 1, 0, 2, 10, 2, 0, 11, 1, 8, 2, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 12, 1, 0, 0, 0, 6, 2, 2, 1, 2, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 3, 1, 3, 2, 0, 0, 5, 4, 0, 0, 1, 5, 2, 0, 0, 0, 1, 0, 0];
+    window.randomArray = [2, 1, 1, 0, 1, 4, 1, 0, 2, 10, 2, 0, 11, 1, 8, 2, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 12, 1, 0, 0, 0, 6, 2, 2, 1, 2, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 3, 1, 3, 2, 0, 0, 5, 4, 0, 0, 1, 5, 2, 0, 0, 0, 1, 0, 0, 2, 1, 2, 2, 2, 0, 1, 3, 2, 1, 1, 0, 1, 4, 2, 1, 3, 2, 1, 10, 2, 0, 0, 0, 1, 3, 1, 0, 7, 2, 1, 0];
 }
 
