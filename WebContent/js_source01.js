@@ -36,6 +36,10 @@ function Stack() {
 		}
 	}
 	
+	this.indexOf = function(item) {
+		return this.stac.indexOf(item);
+	}
+	
 	this.print = function() {
 		return JSON.stringify(this.stac);
 	}
@@ -119,10 +123,10 @@ function copyGrid81toTempGrid81(fromGrid, toGrid) {
 	}
 }
 
-function findOption(level, theGrid, toSolveQueue, oneOptionTaken, branchItem) {
+function findOption(level, theGrid, toSolveQueue, oneOptionTaken, branchItem, branchStack) {
 	console.log('In findOption(level=%s, theGrid.length=%s, toSolveQueue, oneOptionTaken=%s, branchItem=%s)'
 		, level, theGrid.length, ((oneOptionTaken!=null)?oneOptionTaken:'_'), branchItem);
-	var oneOptionTakenFound, temp_i;
+	var oneOptionTakenFound, temp_i, i, branchStackIndex, triedCell, triedCellsCount = 0, tSQTCi; // tSQTCi = toSolveQueueTriedCellIndex
 
 	for(var i=0; i<theGrid.length; i++) {
 		if((theGrid[i][5].length == level+1) && theGrid[i][2] == '_') {
@@ -131,7 +135,7 @@ function findOption(level, theGrid, toSolveQueue, oneOptionTaken, branchItem) {
 			if((oneOptionTaken != null) 
 				&& (oneOptionTakenFound == null) 
 				&& (i == oneOptionTaken[1])) {
-				oneOptionTakenFound = toSolveQueue.length();
+				oneOptionTakenFound = toSolveQueue.length()-1;
 			}
 		}
 	}
@@ -152,18 +156,51 @@ function findOption(level, theGrid, toSolveQueue, oneOptionTaken, branchItem) {
 		&& (toSolveQueue.length() > 0) 
 		&& (toSolveQueue.length() >= oneOptionTakenFound)) {
 
-			temp_i = toSolveQueue.splice(oneOptionTakenFound-1, 1);
-			// toSolveQueue.push(temp_i[0]);
+		// 	oneOptionTaken = [window.prevStack.length(), theCell, triedOptions, window.grid81[theCell][5]]
+		// 	branchStack[index] = [prevStack.length, toSolveQueue, [tried Cells]]
+		branchStackIndex = findOneOptionTakenIndexInBranchStack(oneOptionTaken, branchStack);
+		
+		if(branchStackIndex != null) {
+			triedCellsCount = branchStack.item(branchStackIndex)[2].length;
+		}
+		
+		if(triedCellsCount > 0) {
+			console.log('  fO: toSolveQueue.length()=%s', toSolveQueue.length());
+			
+			for(i=0; i<triedCellsCount; i++) {
+				triedCell = branchStack.item(branchStackIndex)[2][i];
+				tSQTCi = toSolveQueue.indexOf(triedCell);
+				
+				if(tSQTCi != -1) { // -1 if triedCell not found in toSolveQueue
+					temp_i = toSolveQueue.splice(tSQTCi, 1); // splice will output array
+					
+					if(triedCell != oneOptionTaken[1]) {
+						console.log('  fO: discarding invalid triedCell=%s from toSolveQueue', triedCell);
+					} else {
+						toSolveQueue.push(temp_i[0]);
+						console.log('  fO: as triedCell=%s == oneOptionTaken[1]=%s pushing cell back into toSolveQueue', triedCell, oneOptionTaken[1]);
+					}													
+				}
+				
+			}				
+		}
+		
+		console.log('  fO: toSolveQueue.length()=%s', toSolveQueue.length());
+		
+		oneOptionTakenFound = toSolveQueue.indexOf(oneOptionTaken[1]);
+		temp_i = toSolveQueue.splice(oneOptionTakenFound, 1);
+		// toSolveQueue.push(temp_i[0]);
+		
+		// can't use this as I need toSolveQueue to be consistent for branchStack
+		// will try cIV in gNC
+		if(checkIfValid(oneOptionTaken)) {
+			toSolveQueue.push(temp_i[0]);
+			console.log('  fO: keeping valid oneOptionTaken=%s cell in toSolveQueue', JSON.stringify(oneOptionTaken));
+		} else {
+			window.useOneOptionTaken = false;
+			console.log('  fO: discarding invalid oneOptionTaken=%s cell from toSolveQueue and setting window.useOneOptionTaken to false;', JSON.stringify(oneOptionTaken));
+		}				
 
-			// can't use this as I need toSolveQueue to be consistent for branchStack
-			// will try cIV in gNC
-			if(checkIfValid(oneOptionTaken)) {
-				toSolveQueue.push(temp_i[0]);
-				console.log('  fO: keeping valid oneOptionTaken=%s cell in toSolveQueue', JSON.stringify(oneOptionTaken));
-			} else {
-				window.useOneOptionTaken = false;
-				console.log('  fO: discarding invalid oneOptionTaken=%s cell from toSolveQueue and setting window.useOneOptionTaken to false;', JSON.stringify(oneOptionTaken));
-			}
 	}
 
 	console.log('  fO: => %s toSolveQueue.length()=%s, oneOptionTakenFound=%s'
@@ -261,15 +298,16 @@ function getRandomNumber(inclusiveLowerBound, inclusiveUpperBound) {
 		oneAdjust = 1;
 	}
 	
-	if(!window.useRandomArray && (window.randomArray.length > 0)) {
-		randomNumber = Math.floor((Math.random() * (inclusiveUpperBound+oneAdjust)) + (inclusiveLowerBound+oneAdjust)) - oneAdjust;
-		console.log('  gRN: => randomNumber='+randomNumber);		
-		window.randomArray.push(randomNumber);		
-	} else {
+	if(window.useRandomArray && (window.randomArray.length > 0)) {
 		randomNumber = window.randomArray.shift();
 		console.log('  gRN: =>  shifting randomNumber='+randomNumber
 				+' from window.randomArray.length='+window.randomArray.length);		
+	} else {
+		randomNumber = Math.floor((Math.random() * (inclusiveUpperBound+oneAdjust)) + (inclusiveLowerBound+oneAdjust)) - oneAdjust;
+		console.log('  gRN: => randomNumber='+randomNumber);		
+		window.randomArray.push(randomNumber);		
 	}
+	
 	return randomNumber;
 }
 
@@ -342,7 +380,9 @@ function getNewCellValue(theCell, oldCellValue, oneOptionTaken, branchItem) {
 		if((oneOptionTaken != null) && (theCell == oneOptionTaken[1])) {
 			// do something
 			for(var i=0; i<oneOptionTaken[2].length; i++) {
-				triedOptions.push(oneOptionTaken[2][i]);
+				if(oneOptionTaken[2][i] != '_') {
+					triedOptions.push(oneOptionTaken[2][i]);
+				}
 			}
 
 //			newCellValue = chooseOneFromOptionsNotTried(window.grid81[theCell][5], triedOptions);
@@ -606,6 +646,38 @@ function findBranchItemInBranchStack(branchItem/*, branchStack*/) {
 	return index;
 }
 
+function findOneOptionTakenIndexInBranchStack(oneOptionTaken, branchStack) {
+	console.log('In findOneOptionTakenIndexInBranchStack(oneOptionTaken=%s, branchStack.length=%s)'
+			, oneOptionTaken, branchStack.length());	
+	/*
+	oneOptionTaken = [window.prevStack.length(), theCell, triedOptions, window.grid81[theCell][5]]
+	branchStack[index] = [prevStack.length, toSolveQueue, [tried Cells]]
+	*/
+	
+	var index = -1, found = false;
+	
+	if((branchStack.length() > 0) && (oneOptionTaken.length > 0)) {
+		index = branchStack.length() - 1;
+	}
+	
+	while(index >= 0) {
+		found = (branchStack.item(index)[0] == oneOptionTaken[0]) 
+				&& checkIfCellInBranchStackItem(oneOptionTaken[1], branchStack.item(index)[1]);
+		if(found) {
+			break;			
+		} else {
+			index--;			
+		}
+	}
+	
+	console.log('  fOOTIIBS: => %s', (found?index:'Null'));
+	if(found) {
+		return index;		
+	} else {
+		return null;
+	}
+}
+
 function addBranchItemCellInBranchStack(branchItem, index/*, branchStack*/) {
 	console.log('In addBranchItemCellInBranchStack(branchItem[2][0]=%s, index=%s, branchStack[%s][2].length=%s)'
 		, branchItem[2][0], index, index
@@ -804,7 +876,7 @@ function solve2() {
 			// 	// newCellValueError = true;
 			} // if oneOptionTaken is valid against branchStack			
 
-				if(findOption(level, window.grid81, toSolveQueue, oneOptionTaken, branchItem) 
+				if(findOption(level, window.grid81, toSolveQueue, oneOptionTaken, branchItem, branchStack) 
 					/*&& repeat<10*/ 
 					/*&& !newCellValueError*/) {
 
@@ -2550,8 +2622,12 @@ function initialise() {
 	showArrayValues();
     showGrid81Values();    
     
-    window.randomArray = new Array();
     window.useRandomArray = false;
-    window.randomArray = [2, 1, 1, 0, 1, 4, 1, 0, 2, 10, 2, 0, 11, 1, 8, 2, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 12, 1, 0, 0, 0, 6, 2, 2, 1, 2, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 3, 1, 3, 2, 0, 0, 5, 4, 0, 0, 1, 5, 2, 0, 0, 0, 1, 0, 0, 2, 1, 2, 2, 2, 0, 1, 3, 2, 1, 1, 0, 1, 4, 2, 1, 3, 2, 1, 10, 2, 0, 0, 0, 1, 3, 1, 0, 7, 2, 1, 0];
+    if(window.useRandomArray) {
+//        window.randomArray = [2, 1, 1, 0, 1, 4, 1, 0, 2, 10, 2, 0, 11, 1, 8, 2, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 12, 1, 0, 0, 0, 6, 2, 2, 1, 2, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 3, 1, 3, 2, 0, 0, 5, 4, 0, 0, 1, 5, 2, 0, 0, 0, 1, 0, 0, 2, 1, 2, 2, 2, 0, 1, 3, 2, 1, 1, 0, 1, 4, 2, 1, 3, 2, 1, 10, 2, 0, 0, 0, 1, 3, 1, 0, 7, 2, 1, 0];
+        window.randomArray = [2, 2, 2, 0, 4, 1, 1, 0, 0, 2, 0, 0, 3, 1, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 2, 1, 1, 3, 1, 0, 0, 1, 0, 0, 1, 1, 2, 0, 1, 2, 0, 1, 1, 1, 14, 2, 0, 0, 0, 0, 2, 3, 1, 0, 1, 0, 1, 0, 3, 0, 0, 1, 0, 1, 1, 2, 0, 1, 1, 1, 1, 0, 0, 1, 0, 1, 0, 1, 2, 1, 1, 1, 1, 1, 2, 0, 1, 7, 2, 2, 2, 0, 1, 6, 1, 0, 0];
+    } else {
+        window.randomArray = new Array();
+    }
 }
 

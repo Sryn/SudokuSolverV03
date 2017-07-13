@@ -16,14 +16,14 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>1-1.png</name>
-			<type>1</type>
-			<location>C:/Users/hasrin_hajimasri/Documents/GitHub/SudokuSolverV03/1-1.png</location>
-		</link>
-		<link>
 			<name>grid81.xlsx</name>
 			<type>1</type>
 			<location>C:/Users/hasrin_hajimasri/Documents/GitHub/SudokuSolverV03/grid81.xlsx</location>
+		</link>
+		<link>
+			<name>Assets/1-1.png</name>
+			<type>1</type>
+			<location>C:/Users/hasrin_hajimasri/Documents/GitHub/SudokuSolverV03/1-1.png</location>
 		</link>
 	</linkedResources>
 </projectDescription>
