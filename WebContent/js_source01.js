@@ -156,38 +156,39 @@ function findOption(level, theGrid, toSolveQueue, oneOptionTaken, branchItem, br
 		&& (toSolveQueue.length() > 0) 
 		&& (toSolveQueue.length() >= oneOptionTakenFound)) {
 
-		// 	oneOptionTaken = [window.prevStack.length(), theCell, triedOptions, window.grid81[theCell][5]]
-		// 	branchStack[index] = [prevStack.length, toSolveQueue, [tried Cells]]
-		branchStackIndex = findOneOptionTakenIndexInBranchStack(oneOptionTaken, branchStack);
-		
-		if(branchStackIndex != null) {
-			triedCellsCount = branchStack.item(branchStackIndex)[2].length;
-		}
-		
-		if(triedCellsCount > 0) {
-			console.log('  fO: toSolveQueue.length()=%s', toSolveQueue.length());
-			
-			for(i=0; i<triedCellsCount; i++) {
-				triedCell = branchStack.item(branchStackIndex)[2][i];
-				tSQTCi = toSolveQueue.indexOf(triedCell);
-				
-				if(tSQTCi != -1) { // -1 if triedCell not found in toSolveQueue
-					temp_i = toSolveQueue.splice(tSQTCi, 1); // splice will output array
-					
-					if(triedCell != oneOptionTaken[1]) {
-						console.log('  fO: discarding invalid triedCell=%s from toSolveQueue', triedCell);
-					} else {
-						toSolveQueue.push(temp_i[0]);
-						console.log('  fO: as triedCell=%s == oneOptionTaken[1]=%s pushing cell back into toSolveQueue', triedCell, oneOptionTaken[1]);
-					}													
-				}
-				
-			}				
-		}
+		// Below commented out code moved to 'check oneOptionTaken against branchStack'
+//		// 	oneOptionTaken = [window.prevStack.length(), theCell, triedOptions, window.grid81[theCell][5]]
+//		// 	branchStack[index] = [prevStack.length, toSolveQueue, [tried Cells]]
+//		branchStackIndex = findOneOptionTakenIndexInBranchStack(oneOptionTaken, branchStack);
+//		
+//		if(branchStackIndex != null) {
+//			triedCellsCount = branchStack.item(branchStackIndex)[2].length;
+//		}
+//		
+//		if(triedCellsCount > 0) {
+//			console.log('  fO: toSolveQueue.length()=%s', toSolveQueue.length());
+//			
+//			for(i=0; i<triedCellsCount; i++) {
+//				triedCell = branchStack.item(branchStackIndex)[2][i];
+//				tSQTCi = toSolveQueue.indexOf(triedCell);
+//				
+//				if(tSQTCi != -1) { // -1 if triedCell not found in toSolveQueue
+//					temp_i = toSolveQueue.splice(tSQTCi, 1); // splice will output array
+//					
+//					if(triedCell != oneOptionTaken[1]) {
+//						console.log('  fO: discarding invalid triedCell=%s from toSolveQueue', triedCell);
+//					} else {
+//						toSolveQueue.push(temp_i[0]);
+//						console.log('  fO: as triedCell=%s == oneOptionTaken[1]=%s pushing cell back into toSolveQueue', triedCell, oneOptionTaken[1]);
+//					}													
+//				}
+//				
+//			}				
+//		}
 		
 		console.log('  fO: toSolveQueue.length()=%s', toSolveQueue.length());
-		
-		oneOptionTakenFound = toSolveQueue.indexOf(oneOptionTaken[1]);
+
+//		oneOptionTakenFound = toSolveQueue.indexOf(oneOptionTaken[1]);
 		temp_i = toSolveQueue.splice(oneOptionTakenFound, 1);
 		// toSolveQueue.push(temp_i[0]);
 		
@@ -656,7 +657,8 @@ function findOneOptionTakenIndexInBranchStack(oneOptionTaken, branchStack) {
 	
 	var index = -1, found = false;
 	
-	if((branchStack.length() > 0) && (oneOptionTaken.length > 0)) {
+//	if((branchStack.length() > 0) && (oneOptionTaken.length > 0)) {
+	if((branchStack.length() > 0) && (oneOptionTaken != null)) {
 		index = branchStack.length() - 1;
 	}
 	
@@ -790,6 +792,75 @@ function printBranchStack(origin/*, branchStack*/) {
 	}
 }
 
+// return true if newCellValueError
+// return true if, after processing, toSolveQueue is empty
+// else return false, as that will be saved into newCellValueError
+function checkToSolveQueueAgainstBranchStack(newCellValueError, toSolveQueue, oneOptionTaken, branchStack) {
+	console.log('In checkToSolveQueueAgainstBranchStack(newCellValueError=%s'
+			+', toSolveQueue.length=%s'
+			+', oneOptionTaken=%s'
+			+', branchStack.length=%s)'
+			, newCellValueError
+			, toSolveQueue.length()
+			, ((oneOptionTaken!=null)?oneOptionTaken:'_')
+			, branchStack.length);
+	
+	var rtnBool = false, branchStackIndex, triedCellsCount, triedCell, temp_i, tSQTCi; // tSQTCi = toSolveQueueTriedCellIndex
+	
+	if(newCellValueError) {
+		rtnBool = true;
+	} else {
+		// if toSolveQueue becomes 0 length here
+		// set newCellValueError to true
+		// so as to exit while((level <= 9) && stillCellsWith_() && !newCellValueError)
+		// and pop another item from optionsTaken
+		
+		// taking the same cell as in oneOptionTaken, if found, 
+		// and place it at the end for it to be the first one to pop later
+		if((oneOptionTaken != null) && (toSolveQueue.length() > 0)) {
+
+			// 	oneOptionTaken = [window.prevStack.length(), theCell, triedOptions, window.grid81[theCell][5]]
+			// 	branchStack[index] = [prevStack.length, toSolveQueue, [tried Cells]]
+			branchStackIndex = findOneOptionTakenIndexInBranchStack(oneOptionTaken, branchStack);
+			
+			if(branchStackIndex != null) {
+				triedCellsCount = branchStack.item(branchStackIndex)[2].length;
+			}
+			
+			if(triedCellsCount > 0) {
+				console.log('  cTSQABS: toSolveQueue.length()=%s', toSolveQueue.length());
+				
+				for(i=0; i<triedCellsCount; i++) {
+					triedCell = branchStack.item(branchStackIndex)[2][i];
+					tSQTCi = toSolveQueue.indexOf(triedCell);
+					
+					if(tSQTCi != -1) { // -1 if triedCell not found in toSolveQueue
+						temp_i = toSolveQueue.splice(tSQTCi, 1); // splice will output array
+						
+						if(triedCell != oneOptionTaken[1]) {
+							console.log('  cTSQABS: discarding invalid triedCell=%s from toSolveQueue', triedCell);
+						} else {
+							toSolveQueue.push(temp_i[0]);
+							console.log('  cTSQABS: as triedCell=%s == oneOptionTaken[1]=%s pushing cell back into toSolveQueue', triedCell, oneOptionTaken[1]);
+						}													
+					}
+					
+				}				
+			}
+			
+			console.log('  cTSQABS: toSolveQueue.length()=%s', toSolveQueue.length());
+		}
+
+		console.log('  cTSQABS: => %s toSolveQueue.length()=%s'
+			, !(toSolveQueue.length() > 0), toSolveQueue.length());
+
+		rtnBool = !(toSolveQueue.length() > 0);
+	}
+	
+	console.log('  cTSQABS: => ', rtnBool);
+	return rtnBool;
+}
+
 function solve() {
 	console.log('In solve()');
 	
@@ -882,6 +953,9 @@ function solve2() {
 
 					level = 1; // reset options to find back to one
 
+					// check toSolveQueue against branchStack here
+					newCellValueError = checkToSolveQueueAgainstBranchStack(newCellValueError, toSolveQueue, oneOptionTaken, branchStack);
+					
 					// think I should clear toSolveQueue and restart search back at level=1
 					// after just one randomly chosen cell in toSolveQueue
 					// as I could be decreasing options in other cells
