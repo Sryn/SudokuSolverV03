@@ -871,25 +871,25 @@ function checkToSolveQueueAgainstBranchStack(newCellValueError, toSolveQueue, on
 			}
 			
 			console.log('  cTSQABS: toSolveQueue.length()=%s', toSolveQueue.length());
-//		} else if(toSolveQueue.length() > 0) {
-//			branchStackIndex = findCurrentPrevStackLengthIndexInBranchStack(branchStack);
-//			
-//			if(branchStackIndex != null) {
-//				triedCellsCount = branchStack.item(branchStackIndex)[2].length;
-//			}
-//			
-//			if(triedCellsCount > 0) {
-//				console.log('  cTSQABS: toSolveQueue.length()=%s', toSolveQueue.length());
-//				
-//				for(i=0; i<triedCellsCount; i++) {
-//					triedCell = branchStack.item(branchStackIndex)[2][i];
-//					tSQTCi = toSolveQueue.indexOf(triedCell);
-//					
-//					if(tSQTCi != -1) {
-//						
-//					}
-//				}
-//			}
+		} else if(toSolveQueue.length() > 0) {
+			branchStackIndex = findCurrentPrevStackLengthIndexInBranchStack(branchStack);
+			
+			if(branchStackIndex != null) {
+				triedCellsCount = branchStack.item(branchStackIndex)[2].length;
+			}
+			
+			if(triedCellsCount > 0) {
+				console.log('  cTSQABS: toSolveQueue.length()=%s', toSolveQueue.length());
+				
+				for(i=0; i<triedCellsCount; i++) {
+					triedCell = branchStack.item(branchStackIndex)[2][i];
+					tSQTCi = toSolveQueue.indexOf(triedCell);
+					
+					if(tSQTCi != -1) {
+						
+					}
+				}
+			}
 		}
 
 		console.log('  cTSQABS: => %s toSolveQueue.length()=%s'
